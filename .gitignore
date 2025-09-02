@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+#datas
+constitution_and_amendments.json
+international_treaty_act.json
+union_law.json
+united_nations_convection.json
+
+#personal_experiments
+api_test.ipynb
