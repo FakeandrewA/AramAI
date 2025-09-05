@@ -40,6 +40,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-emerald-main: var(--clr-emerald);
+  --font-goldman: var(--font-heading);
+  --font-outfit: var(--font-body);
+
 }
 
 :root {
@@ -83,6 +87,7 @@
   --font-body: "Outfit", sans-serif;
 
   /* Colors */
+  --clr-emerald:#10B981;
   --clr-bg-main: #FFFFFF; /* background */
   --clr-bg-alt: #F5F5F5; /* subtle section background */
   --clr-text-main: #222222; /* main text */
@@ -147,7 +152,8 @@
   --sidebar-ring: oklch(0.556 0 0);
 
     /* own variables */
-
+  
+  --clr-emerald:#10B981;
   --clr-bg-main: #121212;
   --clr-bg-alt: #1E1E1E;
   --clr-text-main: #EDEDED;
@@ -171,8 +177,67 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scroll-behavior: smooth
   }
   body {
     @apply bg-background text-foreground;
   }
 }
+
+body{
+  font-family: Outfit;
+  overflow-x: hidden;
+}
+@utility text-gradient-onboarding-dark {
+    background: linear-gradient(to bottom, #ffffff, #686161);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+@utility text-gradient-onboarding-light {
+    background: linear-gradient(to bottom, #313131, #D3D3D3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+
+@utility text-gradient-green-subehading{
+  @apply bg-gradient-to-r from-[#10B981] to-[#338066] bg-clip-text text-transparent;
+}
+
+.scroll-section-outer{
+  overflow: hidden;
+  
+}
+.scroll-section{
+  height: 100vh;
+  width: 400vw;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+
+/* Webkit browsers: Chrome, Safari, Edge */
+::-webkit-scrollbar {
+  width: 1px; /* vertical scrollbar width */
+  height: 1px; /* horizontal scrollbar height */
+}
+
+::-webkit-scrollbar-track {
+  background: #121212 /* track color */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #10B981; /* scrollbar thumb color */
+  border-radius: 10px;        /* round edges */
+  border: 2px solid #f0f0f0;  /* space around thumb */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;           /* makes it thinner */
+  scrollbar-color: var(--secondary-) var(--border); /* thumb color | track color */
+}
+
+

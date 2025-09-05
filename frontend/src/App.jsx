@@ -1,10 +1,14 @@
 import { Button } from "@/components/ui/button"
+import OnBoardingPage from "./pages/OnBoardingPage"
+import { ThemeProvider } from "./lib/theme-provider";
 
 function App() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center">
-      <Button>Click me</Button>
-    </div>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <div className="min-h-[100vh] w-[100vw] ">
+        <OnBoardingPage/>
+      </div>
+    </ThemeProvider>
   )
 }
 
