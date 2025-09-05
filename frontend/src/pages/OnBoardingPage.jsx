@@ -1,4 +1,4 @@
-import Navbar from '@/components/Navbar'
+import Navbar from '@/components/onboarding/Navbar'
 import Hero from '@/components/onboarding/Hero'
 import ScrollSection from '@/components/onboarding/ScrollSection'
 import React from 'react'
