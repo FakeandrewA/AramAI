@@ -3,23 +3,42 @@ import { useAuth } from "@/lib/authProvider";
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // ✅ Basic validation: check if fields are filled
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.username.trim()) newErrors.username = "Username is required";
+    if (!formData.password.trim()) newErrors.password = "Password is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async () => {
-    if (username === "user" && password === "pass") {
-      login("mock-token");
+    if (!validateForm()) return;
+
+    try {
+      setLoading(true);
+      await login(formData);
       navigate("/chat");
-    } else {
-      alert("Invalid credentials");
+    } catch (error) {
+      setErrors({ general: "Login failed. Please check your credentials." });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSubmit();
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--clr-bg-main)] px-6">
-      <div className="w-full max-w-md rounded-[var(--corner-lg)] bg-[var(--clr-card-bg)] p-8 shadow-[var(--shadow-md)]">
+      <div className="w-full max-w-md rounded-[var(--corner-lg)] bg-[var(--clr-card-bg)] p-8 sm:p-10 shadow-[var(--shadow-md)]">
         {/* Heading */}
         <h1
           className="mb-6 text-center text-3xl font-bold"
@@ -30,30 +49,46 @@ const LoginPage = () => {
           </span>
         </h1>
 
+        {/* General error */}
+        {errors.general && (
+          <p className="mb-4 text-center text-sm text-red-500">
+            {errors.general}
+          </p>
+        )}
+
         {/* Username input */}
         <input
           type="text"
           placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="mb-4 w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          onKeyDown={handleKeyDown}
+          className="mb-2 w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
         />
+        {errors.username && (
+          <p className="mb-4 text-sm text-red-500">{errors.username}</p>
+        )}
 
         {/* Password input */}
         <input
           type="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="mb-6 w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          onKeyDown={handleKeyDown}
+          className="mb-2 w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
         />
+        {errors.password && (
+          <p className="mb-6 text-sm text-red-500">{errors.password}</p>
+        )}
 
         {/* Login button */}
         <button
           onClick={handleSubmit}
-          className="mb-4 w-full rounded-[var(--corner-md)] bg-[var(--clr-primary-main)] px-4 py-3 font-medium text-[var(--clr-text-inverse)] shadow-[var(--shadow-soft)] transition hover:bg-[var(--clr-primary-accent)]"
+          disabled={loading}
+          className="mb-4 w-full rounded-[var(--corner-md)] bg-[var(--clr-primary-main)] px-4 py-3 font-medium text-[var(--clr-text-inverse)] shadow-[var(--shadow-soft)] transition hover:bg-[var(--clr-primary-accent)] disabled:opacity-60"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         {/* Signup link */}
