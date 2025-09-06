@@ -3,7 +3,8 @@ import { ChevronDown } from "lucide-react"
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { SplitText } from "gsap/SplitText";
-
+import { motion } from "motion/react"
+import Background from './Background';
 
 
 gsap.registerPlugin(useGSAP,SplitText);
@@ -41,30 +42,35 @@ const Hero = () => {
         })
     },[])
   return (
-    <div className='relative z-10 min-h-dvh w-full border border-transparent'>
-        <div>
-            <h1 className='md:mt-32 mt-40 text-6xl md:text-[11vw] leading-none text-center font-goldman title dark:text-gradient-onboarding-dark text-gradient-onboarding-light'>ARAM AI</h1>
-        </div>
-        <div className='container mx-auto absolute left-1/2 -translate-x-1/2 lg:bottom-20 bottom-30 md:top-[30vh] flex justify-between items-end px-5 '>
-        <div className='space-y-4 hidden md:block'>
-            <div className='overflow-hidden'>
-                <p className='text-[40px] font-bold text-gradient-green-subehading subheading inline-block overflow-hidden'>Fast. Reliable. Secure <br/>Legal Support</p>
-                
+    <div id='hero' className="relative z-10  min-h-screen w-full border border-transparent bg-transparent px-4 md:px-4 lg:px-8 xl:px-16 2xl:px-32 ">
+        <div className="relative flex flex-col justify-between min-h-screen w-full ">
+            {/* Title at top/center */}
+            <div className="pt-30 text-center pb-20">
+                <h1 className="text-6xl md:text-[11vw] font-goldman title">ARAM AI</h1>
             </div>
-            <p className=' text-lg subtitle'>
-              Trusted legal solutions delivered quickly and <br/>securely.
-            </p>
-        </div>
-        <div className='space-y-6 max-w-[300px]'>
-            <p className=' text-lg subtitle'>Discover how our AI-powered legal platform works—step inside to see fast, secure guidance unfold.</p>
-            <a href="#howItWorks" className="group flex gap-2 font-medium subheading">
-                <p className="group-hover:text-[#059669] transition-all duration-200 group-hover:scale-102 font-bold">HOW IT WORKS</p>
-            </a>
-        </div>
 
+            {/* Subheading at bottom */}
+            <div className="  pb-20 space-y-6 flex justify-between items-start">
+                <div className='space-y-2 hidden md:block'>
+                    <h2 className="text-2xl md:text-[30px] font-bold subheading ">
+                        Fast. Reliable. Secure <br /> Legal Support
+                    </h2>
+                    <p className=' text-[17px] subtitle'>
+
+                        Trusted legal solutions delivered quickly and <br/>securely.
+                    </p>
+                </div>
+                <div className='space-y-4 text-sm w-100 md:w-80'>
+                    <p className='   text-[17px] subtitle'>Discover how our AI-powered legal platform works—step inside to see fast, secure guidance unfold.</p>
+                    <motion.a  initial={{opacity:0 , y:10}} animate={{opacity:1,y:0 }} transition={{duration:0.6, delay:1.8}} href="#knowMore" className='group flex gap-2 font-medium  hover:text-gradient-green items-center '>
+                        <p className='group-hover:text-gradient-green-subehading'>KNOW MORE</p>
+                        <ChevronDown className='group-hover:rotate-180 transition-all duration-100 group-hover:text-[#059669]'/>
+                    </motion.a>
+                </div>
+            </div>
         </div>
-        
     </div>
+
   )
 }
 
