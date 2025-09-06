@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/authProvider";
+import { useAuth } from "@/contexts/authProvider";
 import { validateForm as validate } from "@/utils/auth/validator";
 import ErrorMessage from "@/components/auth/ErrorMessage";
 import { Eye, EyeOff } from "lucide-react"; // install lucide-react if not added

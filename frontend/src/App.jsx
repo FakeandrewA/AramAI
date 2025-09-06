@@ -1,8 +1,8 @@
 import OnBoardingPage from "./pages/OnBoardingPage";
-import { ThemeProvider } from "./lib/theme-provider";
-import { AuthProvider } from "./lib/authProvider";
-import ProtectedRoute from "./lib/ProtectedRoute.jsx";
-import AuthRedirect from "./lib/AuthRedirect";
+import { ThemeProvider } from "./contexts/theme-provider";
+import { AuthProvider } from "./contexts/authProvider";
+import ProtectedRoute from "./contexts/ProtectedRoute.jsx";
+import AuthRedirect from "./contexts/AuthRedirect";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
