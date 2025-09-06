@@ -3,16 +3,15 @@ import { useAuth } from "@/lib/authProvider";
 import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ Basic validation: check if fields are filled
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.username.trim()) newErrors.username = "Username is required";
+    if (!formData.email.trim()) newErrors.email = "Username is required";
     if (!formData.password.trim()) newErrors.password = "Password is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -23,8 +22,11 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      await login(formData);
-      navigate("/chat");
+      const response = await login(formData);
+      if(response.ok) navigate("/chat");
+      else{
+        setErrors({general: "Login failed. Please check your credentials." })
+      }
     } catch (error) {
       setErrors({ general: "Login failed. Please check your credentials." });
     } finally {
@@ -49,19 +51,13 @@ const LoginPage = () => {
           </span>
         </h1>
 
-        {/* General error */}
-        {errors.general && (
-          <p className="mb-4 text-center text-sm text-red-500">
-            {errors.general}
-          </p>
-        )}
 
         {/* Username input */}
         <input
           type="text"
-          placeholder="Username"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          placeholder="Email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           onKeyDown={handleKeyDown}
           className="mb-2 w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
         />
@@ -80,6 +76,12 @@ const LoginPage = () => {
         />
         {errors.password && (
           <p className="mb-6 text-sm text-red-500">{errors.password}</p>
+        )}
+        {/* General error */}
+        {errors.general && (
+          <p className="mb-4 text-center text-sm text-red-500">
+            {errors.general}
+          </p>
         )}
 
         {/* Login button */}

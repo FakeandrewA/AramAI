@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -17,43 +15,45 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const authStatus = checkAuthStatus();
-    setIsAuthenticated(authStatus);
+    setIsAuthenticated(checkAuthStatus());
   }, []);
 
-  // 🔹 Signup request
   const signup = async (formData) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
-        method: "POST",
-        body: formData, // contains file + text fields
-      });
-
-      if (!response.ok) throw new Error("Signup failed");
-
-      const result = await response.json();
-
-      if (result.token) {
-        localStorage.setItem("authToken", result.token);
-        setIsAuthenticated(true);
-        navigate("/chat");
+      const options = { method: "POST" };
+      if(formData instanceof FormData) {
+        options.body = formData;
       }
+      else{
+        options.headers = { "Content-Type": "application/json" };
+        options.body = JSON.stringify(formData);
+      }
+
+      const response = await fetch("http://localhost:5000/api/users/register", options);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return errorData;
+      }
+      alert("Signup successful! Please log in.");
+      navigate("/login");
     } catch (err) {
-      console.error(err);
-      alert("Signup error: " + err.message);
+      console.error("Signup error:", err);
     }
   };
 
-  // 🔹 Login request
   const login = async (credentials) => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
 
-      if (!response.ok) throw new Error("Login failed");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Login failed");
+      }
 
       const result = await response.json();
 
@@ -63,36 +63,15 @@ export const AuthProvider = ({ children }) => {
         navigate("/chat");
       }
     } catch (err) {
-      console.error(err);
-      alert("Login error: " + err.message);
+      console.error("Login error:", err);
     }
   };
 
-  // 🔹 Logout request
-  const logout = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/auth/logout", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Logout failed");
-
-      // Clear token on successful logout
-      localStorage.removeItem("authToken");
-      setIsAuthenticated(false);
-      navigate("/");
-    } catch (err) {
-      console.error(err);
-      alert("Logout error: " + err.message);
-
-      // Even if backend fails, clear local token to avoid stale login
-      localStorage.removeItem("authToken");
-      setIsAuthenticated(false);
-      navigate("/");
-    }
+  // 🔹 Logout
+  const logout = () => {
+    localStorage.removeItem("authToken");
+    setIsAuthenticated(false);
+    navigate("/");
   };
 
   return (

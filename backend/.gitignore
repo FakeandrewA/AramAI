@@ -11,3 +11,4 @@ coverage
 *.sqlite
 *.env
 *.env.local
+uploads/

@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "The back end for the Aram AI with mongo",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "npm run dev"
   },
   "repository": {
-    "type": "git",
+    "type": "module",
     "url": "ARAMAI"
   },
   "author": "Sethukumar, Nawrinth, Andrew, Mithun",
@@ -17,8 +18,12 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
