@@ -12,12 +12,16 @@ const Navbar = () => {
             </div>
             <div className='flex items-center space-x-12 '>
                 <ModeToggle />
+                <button onClick={() => {
+                    window.location.href = '/login';
+                }}>
                 <div className='group px-4 py-2 shadow shadow-foreground/10 border-1 relative hover:scale-102 rounded  font-medium  overflow-hidden cursor-pointer'>
                     <div className='w-full rotate-30 h-5  absolute left-0 translate-x-[100%] group-hover:translate-x-0 transition-all duration-300 bg-foreground/5 '>
                         
                     </div>
                     <p className='text-sm'>Get Started</p>
                 </div>
+                </button>
             </div>
         </div>
         
