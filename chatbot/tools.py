@@ -8,7 +8,7 @@ load_dotenv()
 import os
 
 @tool
-def indian_kannon_search_tool(query : str, pagenum : int = 0):
+def indian_kannon_search_tool(query : str, pagenum : int = 1):
     """Search Indian Kanoon for case law or statutes or Judgements
     Input: query (str) - search keywords or case name
     output : top 3 search results (title + link + snippet)"""

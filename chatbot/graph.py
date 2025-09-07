@@ -34,6 +34,6 @@ with open("graph.png","wb") as f:
     f.write(diagram)
 
 response = app.invoke(input = {
-    "messages" : [HumanMessage(content="hi ")]
+    "messages" : [HumanMessage(content="what happened in the case happened between nandha kumar and lg")]
 })
 print(response)
