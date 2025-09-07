@@ -1,7 +1,46 @@
-import os
+import re
 from langchain.schema import Document
+from langchain.prompts import PromptTemplate
 from typing import List
 from tqdm import tqdm
+from rake_nltk import Rake
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+from joblib import Parallel, delayed
+
+rake = Rake(min_length=1, max_length=3)
+lemmatizer = WordNetLemmatizer()
+
+metadata_template = PromptTemplate.from_template("""
+This chunk is extracted from the legal document: {title}, cited by {cited_by}.
+Source: {source} | Jurisdiction: {jurisdiction} | Type: {doctype}
+Document link: {link}
+tags: {tags}
+keywords:{keywords} 
+""")
+
+def lemmatize_keywords(phrases):
+    lemmatized = []
+    for phrase in phrases:
+        tokens = word_tokenize(phrase)
+        lemmatized_phrase = " ".join([lemmatizer.lemmatize(token) for token in tokens])
+        lemmatized.append(lemmatized_phrase)
+    return list(set(lemmatized))
+
+def extract_tags(title: str, text: str):
+    combined = (title + " " + text).lower()
+
+    rake.extract_keywords_from_text(combined)
+    keywords = rake.get_ranked_phrases()
+    keywords = set(
+        kw for kw in keywords
+        if not re.search(r"\b(?!1[2-9][0-9]{2}|20[0-1][0-9]|202[0-5])\d+\b", kw)
+    )
+
+    clean_keywords = lemmatize_keywords(keywords)
+    return ", ".join(clean_keywords)
+
+
 def merge_shorter_chunks(chunks:List[Document],chunk_overlap:int,threshold:int=1000)->List[Document]:
     """
     Merges document chunks that fall below a specified character length threshold
@@ -57,4 +96,17 @@ def merge_shorter_chunks(chunks:List[Document],chunk_overlap:int,threshold:int=1
     print("Before Processing docs: ",idx_of_threshold_chunks)
     return chunks
 
-    
+
+def process_chunk(chunk):
+    keywords = extract_tags(chunk.metadata["title"], chunk.page_content)
+    metadata = chunk.metadata.copy()
+    metadata["keywords"] = keywords
+    header = metadata_template.format(**metadata)
+    chunk.page_content = header + "\n\nDocument Fragment:\n" + chunk.page_content
+    return chunk
+
+def inject_context_to_chunks_parallel(chunks, n_jobs=12):
+    results = Parallel(n_jobs=n_jobs, backend="loky")(
+        delayed(process_chunk)(chunk) for chunk in tqdm(chunks, desc="Processing")
+    )
+    return results
