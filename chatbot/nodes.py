@@ -3,10 +3,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
 from tools import indian_kannon_search_tool
 from langgraph.prebuilt import ToolNode
+from langchain_tavily import TavilySearchResults
+from langchain_core.messages import ToolMessage
 
 tools = [indian_kannon_search_tool]
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro")
 
 
 def base_llm_node(state : base_state) -> base_state:
@@ -43,4 +45,47 @@ def base_llm_node(state : base_state) -> base_state:
         "messages" : response
     }
 
-indian_kannon_search_tool_node = ToolNode(tools=tools)
+search_tool = TavilySearchResults(
+    max_results=4,
+)
+
+def tool_node(state):
+    """Custom tool node that handles tool calls from the LLM."""
+
+    tool_calls = state["messages"][-1].tool_calls
+    
+    tool_messages = []
+    
+    for tool_call in tool_calls:
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
+        tool_id = tool_call["id"]
+        
+        if tool_name == "tavily_search_results_json":
+
+            search_results = search_tool.ainvoke(tool_args)
+            
+            tool_message = ToolMessage(
+                content=str(search_results),
+                tool_call_id=tool_id,
+                name=tool_name
+            )
+            
+            tool_messages.append(tool_message)
+        
+        elif tool_name == "indian_kannon_search_tool":
+
+            search_results = indian_kannon_search_tool.ainvoke(tool_args)
+
+            tool_message = ToolMessage(
+                content = search_results,
+                tool_call_id = tool_id,
+                name = tool_name,
+            )
+    
+    # Add the tool messages to the state
+    return {"messages": tool_messages}
+
+tools = [search_tool, indian_kannon_search_tool]
+
+tool_node = ToolNode(tools = tools)

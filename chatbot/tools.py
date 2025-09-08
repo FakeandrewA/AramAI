@@ -1,20 +1,27 @@
 from langchain.tools import tool
-from langgraph.prebuilt import ToolNode
 import requests
 from bs4 import BeautifulSoup
-from schema import base_state
 from dotenv import load_dotenv
-load_dotenv()
 import os
+from rank_bm25 import BM25Okapi  # ✅ BM25
+
+load_dotenv()
+
+def extract_tokens_with_bs4(text: str):
+    """Extract tokens using BeautifulSoup, lowercase + simple split."""
+    soup = BeautifulSoup(text, "html.parser")
+    clean_text = soup.get_text(" ", strip=True)
+    tokens = [w.lower() for w in clean_text.split() if len(w) > 2]
+    stopwords = {"the", "and", "for", "with", "that", "from", "case", "law"}
+    return [t for t in tokens if t not in stopwords]
 
 @tool
-def indian_kannon_search_tool(query : str, pagenum : int = 1):
-    """Search Indian Kanoon for case law or statutes or Judgements
-    Input: query (str) - search keywords or case name
-    output : top 3 search results (title + link + snippet)"""
+def indian_kannon_search_tool(query: str, pagenum: int = 1):
+    """Search Indian Kanoon for case law, statutes or judgments.
+    Uses BM25 to find the most relevant pages inside judgments.
+    """
 
     base_url = "https://api.indiankanoon.org"
-    
     api_key = os.getenv("INDIAN_KANOON_API_KEY")
 
     headers = {
@@ -23,37 +30,70 @@ def indian_kannon_search_tool(query : str, pagenum : int = 1):
     }
 
     search_url = f"{base_url}/search/"
-    params = {"formInput": query, "pagenum": pagenum}
-    response = requests.get(search_url, headers=headers, params=params)
+    payload = {"formInput": query, "pagenum": pagenum}
+
+    response = requests.post(search_url, headers=headers, data=payload)
     if response.status_code != 200:
         return f"Error {response.status_code}: {response.text}"
 
     data = response.json()
     results = []
 
-    # Step 2: For top 2–3 results, fetch full judgment text
-    for item in data.get("docs", [])[:2]:  # limit to 2 for efficiency
-        docid = item.get("id", "")
+    # Query tokens for BM25
+    query_tokens = extract_tokens_with_bs4(query)
+
+    for item in data.get("docs", [])[:2]:
+        docid = item.get("tid")
         if not docid:
             continue
 
-        # Fetch judgment
+        # Fetch full judgment
         doc_url = f"{base_url}/doc/{docid}/"
-        doc_res = requests.get(doc_url, headers=headers)
+        doc_res = requests.post(doc_url, headers=headers)
         if doc_res.status_code != 200:
-            judgment_text = f"Could not fetch doc {docid}"
-        else:
-            judgment_data = doc_res.json()
-            judgment_text = judgment_data.get("doc", "No text available")
+            continue
+
+        judgment_data = doc_res.json()
+        judgment_text = judgment_data.get("doc", "No text available")
+
+        # Clean HTML into plain text
+        soup = BeautifulSoup(judgment_text, "html.parser")
+        full_text = soup.get_text("\n", strip=True)
+
+        # Split into pseudo-pages
+        pages = [p.strip() for p in full_text.split("\n\n\n") if p.strip()]
+
+        # Tokenize pages
+        tokenized_pages = [extract_tokens_with_bs4(p) for p in pages]
+
+        # BM25 model
+        bm25 = BM25Okapi(tokenized_pages)
+
+        # Rank pages
+        scores = bm25.get_scores(query_tokens)
+        if not scores.any():
+            continue
+
+        best_idx = int(scores.argmax())
+
+        # Collect best + neighbors
+        relevant_pages = []
+        for i in [best_idx - 1, best_idx, best_idx + 1]:
+            if 0 <= i < len(pages):
+                relevant_pages.append({
+                    "page_no": i,
+                    "score": float(scores[i]),
+                    "content": pages[i]
+                })
 
         results.append({
-            "title": item.get("title", "Not specified"),
-            "citation": item.get("citation", "Not specified"),
+            "title": BeautifulSoup(item.get("title", "Not specified"), "html.parser").get_text(" ", strip=True),
+            "citation": BeautifulSoup(item.get("citation", "Not specified"), "html.parser").get_text(" ", strip=True),
+            "publishdate": item.get("publishdate", "Unknown"),
+            "docsource": BeautifulSoup(item.get("docsource", "Unknown"), "html.parser").get_text(" ", strip=True),
             "link": f"https://indiankanoon.org/doc/{docid}/",
-            "snippet": item.get("snippet", "").strip(),
-            "judgment_text": judgment_text[:2000] + "..."  # truncate for LLM context
+            "snippet": BeautifulSoup(item.get("headline", ""), "html.parser").get_text(" ", strip=True),
+            "relevant_pages": relevant_pages
         })
 
     return results if results else "No results found."
-
-

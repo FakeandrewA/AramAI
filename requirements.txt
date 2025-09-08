@@ -9,3 +9,4 @@ qdrant-client
 matplotlib
 numpy
 tqdm
+langchain_experimental
