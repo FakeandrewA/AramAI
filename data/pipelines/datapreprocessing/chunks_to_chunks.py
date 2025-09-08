@@ -7,6 +7,31 @@ from rake_nltk import Rake
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from joblib import Parallel, delayed
+import nltk
+from nltk.data import find
+
+
+def ensure_nltk_resource(resource, download_name=None):
+    """
+    Check if an NLTK resource exists, otherwise download it.
+    :param resource: path used by nltk.data.find()
+    :param download_name: name used in nltk.download(), defaults to resource
+    """
+    try:
+        find(resource)
+    except LookupError:
+        nltk.download(download_name or resource.split("/")[-1])
+
+# punkt tokenizer
+ensure_nltk_resource("tokenizers/punkt", "punkt")
+
+# stopwords corpus
+ensure_nltk_resource("corpora/stopwords", "stopwords")
+
+# wordnet (optional)
+ensure_nltk_resource("corpora/wordnet", "wordnet")
+
+
 
 rake = Rake(min_length=1, max_length=3)
 lemmatizer = WordNetLemmatizer()
