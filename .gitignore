@@ -215,6 +215,8 @@ united_nations_convection.json
 *-act.json
 *_data.json
 *_db
+bm25_index.pkl
+chunk_id_to_doc.json
 
 #personal_experiments
 *_test.ipynb

@@ -19,13 +19,6 @@ def embed_documents_to_qdrant(
     
     client = QdrantClient(url=qdrant_url,prefer_grpc=False)
 
-    if client.collection_exists(collection_name):
-        client.delete_collection(collection_name)
-
-    client.create_collection(
-        collection_name=collection_name,
-        vectors_config=VectorParams(size=vector_dim, distance=distance)
-        )
     
     # Split documents into batches
     batches = [documents[i:i + batch_size] for i in range(0, len(documents), batch_size)]
