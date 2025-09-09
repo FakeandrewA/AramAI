@@ -27,7 +27,7 @@ def get_relevant_points(
     rerank: bool = False,
     top_rk: int = 5,
     cross_encoder: CrossEncoder = None,
-) -> List[ScoredPoint]:
+) -> List[str]:
 
     # Get query vector
     query_vector = embed_query(query)
@@ -47,4 +47,4 @@ def get_relevant_points(
         scored_docs = sorted(zip(points, scores), key=lambda x: x[1], reverse=True)
         points = [point for point, _ in scored_docs][:top_rk]
 
-    return points
+    return [point.payload.get("page_content","") for point in points]

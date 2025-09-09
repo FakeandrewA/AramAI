@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 from rank_bm25 import BM25Okapi
+from retrieval.utils import get_relevant_points,get_client
+from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
 
 load_dotenv()
 
@@ -14,6 +16,12 @@ def extract_tokens_with_bs4(text: str):
     tokens = [w.lower() for w in clean_text.split() if len(w) > 2]
     stopwords = {"the", "and", "for", "with", "that", "from", "case", "law"}
     return [t for t in tokens if t not in stopwords]
+
+@tool
+def rag_tool(query:str,rerank:bool,top_k:int,top_rerank_k:int):
+    """Use this tool to get relevant document chunks stored in our qdrant db for the user's query , restructure the user's query to get the most relevancy"""
+    client = get_client()
+    return get_relevant_points(query,client,COLLECTION_NAME,top_k,rerank,top_rerank_k)
 
 @tool
 def indian_kannon_search_tool(query: str, pagenum: int = 1):
