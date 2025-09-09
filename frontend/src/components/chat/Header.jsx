@@ -9,7 +9,7 @@ const Header = () => {
       <div className="flex items-center relative">
         <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 w-1.5 h-6 bg-teal-400 rounded-full opacity-80"></div>
         <span className="font-heading font-bold text-xl tracking-tight text-white">
-          Perplexity 2.0
+          ARAM AI
         </span>
       </div>
     </header>

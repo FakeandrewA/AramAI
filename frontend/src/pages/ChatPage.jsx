@@ -4,6 +4,8 @@ import MessageArea from "@/components/chat/MessageArea";
 import React, { useState } from "react";
 
 const ChatPage = () => {
+    const { chatId } = useParams();
+    console.log("Current chat id:", chatId);
     const [messages, setMessages] = useState([
         {
             id: 1,
@@ -52,11 +54,9 @@ const ChatPage = () => {
                     },
                 ]);
 
-                let url = `https://perplexity-api.onrender.com/chat_stream/${encodeURIComponent(
-                    userInput
-                )}`;
+                let url = `http://localhost:5000/api/chats/send?chatId=YOUR_CHAT_ID&query=${encodeURIComponent(userInput)}`;
                 if (checkpointId) {
-                    url += `?checkpoint_id=${encodeURIComponent(checkpointId)}`;
+                    url += `&checkpoint_id=${encodeURIComponent(checkpointId)}`;
                 }
 
                 const eventSource = new EventSource(url);
