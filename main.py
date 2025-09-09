@@ -1,6 +1,7 @@
 from retrieval.utils import get_relevant_points,get_client
 from retrieval.config import CROSS_ENCODER,COLLECTION_NAME   # loaded at start
-
+from chatbot.graph import app
+from langchain.schema import HumanMessage
 def search_vectorstore(query: str,top_k:int,top_rk:int):
     # your Qdrant query here...
     client = get_client()
@@ -13,3 +14,8 @@ def search_vectorstore(query: str,top_k:int,top_rk:int):
 
 if __name__ == "__main__":
     # print(search_vectorstore("Who is the prime minster of india",10,5))
+    response = app.invoke(input = {
+    "messages" : [HumanMessage(content="what happened in the case happened between nandha kumar and lg")]
+    })
+    print(response)
+    

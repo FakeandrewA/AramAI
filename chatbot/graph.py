@@ -1,6 +1,6 @@
-from schema import base_state
+from chatbot.schema import base_state
 from langgraph.graph import StateGraph, END
-from nodes import tool_node, base_llm_node
+from chatbot.nodes import tool_node, base_llm_node
 from langchain_core.messages import HumanMessage
 
 graph = StateGraph(base_state)
