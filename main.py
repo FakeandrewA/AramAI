@@ -1,6 +1,5 @@
 from retrieval.utils import get_relevant_points,get_client
-from retrieval.config import CROSS_ENCODER,COLLECTION_NAME   # loaded at startup
-
+from retrieval.config import CROSS_ENCODER,COLLECTION_NAME   # loaded at start
 
 def search_vectorstore(query: str,top_k:int,top_rk:int):
     # your Qdrant query here...
@@ -13,4 +12,4 @@ def search_vectorstore(query: str,top_k:int,top_rk:int):
     
 
 if __name__ == "__main__":
-    print(search_vectorstore("Who is the prime minster of india",10,5))
+    # print(search_vectorstore("Who is the prime minster of india",10,5))

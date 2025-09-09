@@ -17,7 +17,6 @@ def indian_kannon_search_tool(query: str, pagenum: int = 1):
         "Accept": "application/json"
     }
 
-    # ✅ Use POST instead of GET
     search_url = f"{base_url}/search/"
     payload = {"formInput": query, "pagenum": pagenum}
 

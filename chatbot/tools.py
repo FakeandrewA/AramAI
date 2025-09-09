@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
-from rank_bm25 import BM25Okapi  # ✅ BM25
+from rank_bm25 import BM25Okapi
 
 load_dotenv()
 

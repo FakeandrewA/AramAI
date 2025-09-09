@@ -13,3 +13,7 @@ tqdm
 rake_nltk
 joblib
 sentence_transformers
+rank_bm25
+langchain-google-genai
+langchain-tavily
+langgraph

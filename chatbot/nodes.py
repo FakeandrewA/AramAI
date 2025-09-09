@@ -3,12 +3,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
 from tools import indian_kannon_search_tool
 from langgraph.prebuilt import ToolNode
-from langchain_tavily import TavilySearchResults
+from langchain_tavily import TavilySearch
 from langchain_core.messages import ToolMessage
 
 tools = [indian_kannon_search_tool]
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro")
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
 
 def base_llm_node(state : base_state) -> base_state:
@@ -45,7 +45,7 @@ def base_llm_node(state : base_state) -> base_state:
         "messages" : response
     }
 
-search_tool = TavilySearchResults(
+search_tool = TavilySearch(
     max_results=4,
 )
 
