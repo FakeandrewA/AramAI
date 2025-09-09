@@ -4,9 +4,12 @@ langchain
 langchain-core
 langchain-community
 langchain-ollama
+langchain-experimental
 langchain-qdrant
 qdrant-client
 matplotlib
 numpy
 tqdm
-langchain_experimental
+rake_nltk
+joblib
+sentence_transformers
