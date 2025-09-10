@@ -2,6 +2,12 @@ from chatbot.schema import base_state
 from langgraph.graph import StateGraph, END
 from chatbot.nodes import tool_node, base_llm_node
 from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.sqlite import SqliteSaver
+import sqlite3
+
+sqlite_conn = sqlite3.connect("checkpoint.sqlite", check_same_thread=False) 
+
+memory = SqliteSaver(sqlite_conn)
 
 graph = StateGraph(base_state)
 
@@ -23,7 +29,11 @@ graph.add_conditional_edges("base_llm_node", should_use_tool, path_map={
     "no_tools" : END
 })
 
-app = graph.compile()
+app = graph.compile(checkpointer=memory)
+
+config = {"configurable": {
+    "thread_id": 12345
+}}
 
 
 # diagram = app.get_graph().draw_mermaid_png()

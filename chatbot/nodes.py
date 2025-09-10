@@ -12,7 +12,7 @@ load_dotenv()
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
 
-def base_llm_node(state : base_state) -> base_state:
+async def base_llm_node(state : base_state) -> base_state:
     system_prompt = """
     You are a legal assistant specialized in Indian law. 
 Your role is to answer only queries related to Indian law (Constitution, Acts, Rules, Regulations, and case law).  
@@ -43,7 +43,7 @@ Instructions:
 
     llm_with_tools = llm.bind_tools(tools=tools)
     legal_advisor_chain =  legal_advisor_prompt | llm_with_tools
-    response = legal_advisor_chain.invoke({"messages":state["messages"]})
+    response = legal_advisor_chain.ainvoke({"messages":state["messages"]})
     return {
         "messages" : response
     }
@@ -52,7 +52,7 @@ search_tool = TavilySearch(
     max_results=4,
 )
 
-def tool_node(state):
+async def tool_node(state):
     """Custom tool node that handles tool calls from the LLM."""
 
     tool_calls = state["messages"][-1].tool_calls

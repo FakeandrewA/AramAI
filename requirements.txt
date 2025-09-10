@@ -17,3 +17,4 @@ rank_bm25
 langchain-google-genai
 langchain-tavily
 langgraph
+langgraph-checkpoint-sqlite
