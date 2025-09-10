@@ -1,6 +1,7 @@
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import fetch from "node-fetch"; // for calling AI API
+import { generateChatName } from "../utils.js";
 
 /**
  * Create a new chat with a default welcome message
@@ -12,6 +13,7 @@ export const createChat = async (req, res) => {
     // create chat with default AI message
     const chat = await Chat.create({
       user: userId,
+      name: generateChatName(),
       messages: [
         {
           role: "ai",
@@ -27,6 +29,7 @@ export const createChat = async (req, res) => {
 
     res.status(201).json({
       chatId: chat._id,
+      name: chat.name,
       messages: chat.messages,
     });
   } catch (error) {
@@ -177,6 +180,7 @@ export const getUserChats = async (req, res) => {
     res.status(200).json({
       chats: user.chats.map((chat) => ({
         chatId: chat._id,
+        name: chat.name,
         createdAt: chat.createdAt,
       })),
     });

@@ -1,6 +1,6 @@
 const Header = () => {
   return (
-    <header className="relative flex items-center justify-between px-8 py-5 bg-[linear-gradient(var(--gradient-header))] z-10">
+    <header className="relative flex items-center justify-between px-8 py-3 bg-[linear-gradient(var(--gradient-header))] z-10">
       {/* Subtle overlay */}
       <div className="absolute inset-0 opacity-5 mix-blend-overlay bg-[url('/api/placeholder/100/100')]"></div>
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
