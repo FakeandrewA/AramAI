@@ -10,7 +10,8 @@ const chatSchema = new mongoose.Schema({
             query: String,
             urls: [String],
       },
-      content: { type: String, required: true }
+      content: { type: String, required: true },
+      messageid: {Number}
     }
   ]
 }, { timestamps: true });
