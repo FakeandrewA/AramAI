@@ -9,8 +9,8 @@ def embed_query(query: str):
     query_vector = OllamaEmbeddings(model = "nomic-embed-text").embed_query(query)
     return query_vector
 
-def get_client():
-    client = QdrantClient(host="localhost", port=6333)
+def get_client(host : str = "localhost", api_key : str = ""):
+    client = QdrantClient(host=host, port=6333, api_key= api_key)
     try:
         client.info()
         print("Qdrant is running ✅")
