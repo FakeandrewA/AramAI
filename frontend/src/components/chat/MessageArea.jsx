@@ -113,6 +113,7 @@ const SearchStages = ({ searchInfo }) => {
 };
 
 const MessageArea = ({ messages }) => {
+  console.log(messages);
   return (
     <div
       className="flex-grow overflow-y-auto bg-background border-b border-border"
@@ -123,17 +124,17 @@ const MessageArea = ({ messages }) => {
           <div
             key={message._id}
             className={`flex ${
-              message.isUser ? "justify-end" : "justify-start"
+              message.role==="user" ? "justify-end" : "justify-start"
             } mb-5`}
           >
             <div className="flex flex-col max-w-[75%]">
-              {!message.isUser && message.searchInfo && (
+              {message.role!=="user" && message.searchInfo && (
                 <SearchStages searchInfo={message.searchInfo} />
               )}
 
               <div
                 className={`rounded-lg py-3 px-5 ${
-                  message.isUser
+                  message.role==="user"
                     ? "bg-[linear-gradient(var(--chat-gradient))] text-[var(--clr-text-inverse)] rounded-br-none shadow-md"
                     : "bg-card text-foreground border border-border rounded-bl-none shadow-sm"
                 }`}

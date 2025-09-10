@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const ChatList = ({ chats, onNewChat, userId }) => {
-  console.log(chats);
+
   const navigate = useNavigate();
   const handleNewChat = async () => {
     // wait for backend to return new chat
@@ -13,7 +13,7 @@ const ChatList = ({ chats, onNewChat, userId }) => {
   };
 
   return (
-    <div className="w-full bg-background border-r border-border flex flex-col">
+    <div className="w-full h-fit bg-background border-r border-border flex flex-col">
       {/* New Chat Button */}
       <div className="w-full p-2 border-b border-border">
         <button

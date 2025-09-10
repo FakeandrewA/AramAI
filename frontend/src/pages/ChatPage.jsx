@@ -33,16 +33,18 @@ const ChatPage = () => {
 
     const [currentMessage, setCurrentMessage] = useState("");
     const [checkpointId, setCheckpointId] = useState(null);
+    const [receiving, setReceiving] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setReceiving(true);
         if (currentMessage.trim()) {
-            const newMessageId =
-                messages.length > 0 ? Math.max(...messages.map((msg) => msg.id)) + 1 : 1;
+            const newMessageId = messages.length + 1;
 
             setMessages((prev) => [
                 ...prev,
                 {
+                    role: "user",
                     id: newMessageId,
                     content: currentMessage,
                     isUser: true,
@@ -58,7 +60,7 @@ const ChatPage = () => {
                 setMessages((prev) => [
                     ...prev,
                     {
-
+                        role: "ai",
                         id: aiResponseId,
                         content: "",
                         isUser: false,
@@ -75,9 +77,9 @@ const ChatPage = () => {
                     userId: authUser._id,
                     chatId: chatId,
                     query: userInput,
-                    messageId: aiResponseId
+                    messageId: aiResponseId,
                 };
-                let url = `http://localhost:5000/api/chats/send?chatId=${chatId}&query=${encodeURIComponent(message)}`;
+                let url = `http://localhost:5000/api/chats/send?chatId=${chatId}&queryreceived=${encodeURIComponent(JSON.stringify(message))}`;
                 if (checkpointId) {
                     url += `&checkpoint_id=${encodeURIComponent(checkpointId)}`;
                 }
@@ -93,6 +95,7 @@ const ChatPage = () => {
 
                         if (data.type === "checkpoint") {
                             setCheckpointId(data.checkpoint_id);
+                            console.log(data.checkpoint_id);
                         } else if (data.type === "content") {
                             streamedContent += data.content;
                             hasReceivedContent = true;
@@ -174,6 +177,7 @@ const ChatPage = () => {
                                         : msg
                                 )
                             );
+                            setReceiving(false);
                         } else if (data.type === "end") {
                             if (searchData) {
                                 const finalSearchInfo = {
@@ -191,6 +195,7 @@ const ChatPage = () => {
                             }
 
                             eventSource.close();
+                            setReceiving(false);
                         }
                     } catch (error) {
                         console.error("Error parsing event data:", error, event.data);
@@ -201,7 +206,6 @@ const ChatPage = () => {
                     console.error("EventSource error:", error);
                     eventSource.close();
 
-                    if (!streamedContent) {
                         setMessages((prev) =>
                             prev.map((msg) =>
                                 msg.id === aiResponseId
@@ -214,11 +218,12 @@ const ChatPage = () => {
                                     : msg
                             )
                         );
-                    }
+                    setReceiving(false);
                 };
 
                 eventSource.addEventListener("end", () => {
                     eventSource.close();
+                    setReceiving(false);
                 });
             } catch (error) {
                 console.error("Error setting up EventSource:", error);
@@ -232,6 +237,7 @@ const ChatPage = () => {
                         isLoading: false,
                     },
                 ]);
+                setReceiving(false);
             }
         }
     };
@@ -253,6 +259,7 @@ const ChatPage = () => {
                         currentMessage={currentMessage}
                         setCurrentMessage={setCurrentMessage}
                         onSubmit={handleSubmit}
+                        disabled = {receiving}
                     />
                 </div>
 

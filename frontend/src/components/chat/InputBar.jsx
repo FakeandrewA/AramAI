@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const InputBar = ({ currentMessage, setCurrentMessage, onSubmit }) => {
+const InputBar = ({ currentMessage, setCurrentMessage, onSubmit, disabled }) => {
   const handleChange = (e) => {
     setCurrentMessage(e.target.value);
   };
@@ -63,8 +63,9 @@ const InputBar = ({ currentMessage, setCurrentMessage, onSubmit }) => {
         {/* Send button */}
 <button
   type="submit"
+  disabled = {disabled}
   className="bg-[linear-gradient(var(--gradient-accent))] hover:opacity-90 rounded-full p-3 ml-2 shadow-md transition-all duration-200 group"
->
+> 
   <svg
     className="w-6 h-6 text-white transform rotate-45 group-hover:scale-110 transition-transform duration-200"
     fill="none"

@@ -10,7 +10,7 @@ import { protect } from "../middlewares/authmiddleware.js";
 const router = express.Router();
 
 router.post("/create", protect, createChat);
-router.post("/send", sendMessage);
+router.get("/send", sendMessage);
 router.get("/:chatId/messages", protect,getChatMessages);
 router.get("/user/:userId", getUserChats);
 

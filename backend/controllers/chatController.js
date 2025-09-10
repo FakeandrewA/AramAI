@@ -1,6 +1,6 @@
 import Chat from "../models/chatModel.js";
 import User from "../models/userModel.js";
-import { generateChatName } from "../utils.js";
+import { generateChatName, safeJSONParse } from "../utils.js";
 
 /**
  * Create a new chat with a default welcome message
@@ -40,16 +40,23 @@ export const createChat = async (req, res) => {
 /**
  * Handle user query -> send to AI -> save only if response is complete
  */
+
 export const sendMessage = async (req, res) => {
   try {
-    const { chatId, query } = req.body;
+    const { chatId, queryreceived } = req.query;
+    if (!chatId || !queryreceived) {
+      return res.status(400).json({ message: "chatId and queryreceived required" });
+    }
 
-    // add user message first
+    const query = JSON.parse(queryreceived);
+    console.log(query);
+
+    // 1️⃣ Add user message to DB (optimistic insert)
     await Chat.findByIdAndUpdate(chatId, {
-      $push: { messages: { role: "user", content: query } },
+      $push: { messages: { role: "user", content: query.query } },
     });
 
-    // set headers for SSE (stream)
+    // 2️⃣ Set SSE headers
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
@@ -57,88 +64,99 @@ export const sendMessage = async (req, res) => {
 
     let streamedContent = "";
     let searchInfo = null;
+    let aiMessageSaved = false;
 
-    // call your AI API that streams events
-    const eventSource = fetch(
-      `https://perplexity-api.onrender.com/chat_stream/${encodeURIComponent(
-        query
-      )}`
+    // 3️⃣ Call AI API streaming endpoint
+    const aiResponse = await fetch(
+      `http://localhost:8000/chat_stream/${encodeURIComponent(query.query)}`
     );
 
-    const response = await eventSource;
-
-    if (!response.body) {
+    if (!aiResponse.body) {
       throw new Error("No response body from AI service");
     }
-
-    const reader = response.body.getReader();
+    console.log(aiResponse);
+    const reader = aiResponse.body.getReader();
     const decoder = new TextDecoder();
 
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
+      const chunk = decoder.decode(value, { stream: true }).trim();
+      if (!chunk) continue;
 
-      try {
-        const data = JSON.parse(chunk);
+      const lines = chunk.split("\n").filter(Boolean);
+      for (const line of lines) {
+        try {
+          // 🔹 Strip `data:` prefix
+          const cleanLine = line.startsWith("data:") ? line.replace(/^data:\s*/, "") : line;
+          if (!cleanLine) continue;
 
-        // forward event to frontend immediately
-        res.write(`data: ${JSON.stringify(data)}\n\n`);
+          const data = safeJSONParse(cleanLine);
 
-        if (data.type === "content") {
-          streamedContent += data.content;
-        } else if (data.type === "search_start") {
-          searchInfo = { stages: ["searching"], query: data.query, urls: [] };
-        } else if (data.type === "search_results") {
-          searchInfo = {
-            stages: searchInfo ? [...searchInfo.stages, "reading"] : ["reading"],
-            query: searchInfo?.query || "",
-            urls: Array.isArray(data.urls) ? data.urls : [],
-          };
-        } else if (data.type === "end") {
-          // save final AI message in DB
-          await Chat.findByIdAndUpdate(chatId, {
-            $push: {
-              messages: {
-                role: "ai",
-                content: streamedContent,
-                searchInfo: searchInfo || { stages: [], query: "", urls: [] },
-              },
-            },
-          });
+          // Stream to frontend
+          res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+          if (data.type === "content") {
+            streamedContent += data.content;
+          } else if (data.type === "search_start") {
+            searchInfo = { stages: ["searching"], query: data.query, urls: [] };
+          } else if (data.type === "search_results") {
+            searchInfo = {
+              stages: searchInfo ? [...searchInfo.stages, "reading"] : ["reading"],
+              query: searchInfo?.query || "",
+              urls: Array.isArray(data.urls) ? data.urls : [],
+            };
+          } else if (data.type === "end") {
+            // Save AI message only if streaming succeeded
+            if (streamedContent.trim()) {
+              await Chat.findByIdAndUpdate(chatId, {
+                $push: {
+                  messages: {
+                    role: "ai",
+                    content: streamedContent,
+                    searchInfo: searchInfo || { stages: [], query: "", urls: [] },
+                  },
+                },
+              });
+              aiMessageSaved = true;
+            }
+          }
+        } catch (err) {
+          console.error("Error parsing AI chunk:", err, line);
+          res.write(
+            `data: ${JSON.stringify({ type: "search_error", message: "AI chunk parse error" })}\n\n`
+          );
         }
-      } catch (err) {
-        console.error("Error parsing AI event:", err);
-
-        // rollback: remove the user query if AI failed
-        await Chat.findByIdAndUpdate(chatId, {
-          $pull: { messages: { role: "user", content: query } },
-        });
-
-        res.write(
-          `data: ${JSON.stringify({
-            type: "error",
-            message: "AI response error",
-          })}\n\n`
-        );
-        break;
       }
+    }
+
+    // 4️⃣ If no AI message saved → rollback user message
+    if (!aiMessageSaved) {
+      await Chat.findByIdAndUpdate(chatId, {
+        $pop: { messages: 1 }, // remove last inserted message (the user one)
+      });
     }
 
     res.end();
   } catch (error) {
     console.error("Error in sendMessage:", error);
 
+    // Rollback user message on failure
+    const { chatId } = req.query;
+    if (chatId) {
+      await Chat.findByIdAndUpdate(chatId, {
+        $pop: { messages: 1 },
+      });
+    }
+
     res.write(
-      `data: ${JSON.stringify({
-        type: "error",
-        message: "Failed to connect to AI",
-      })}\n\n`
+      `data: ${JSON.stringify({ type: "search_error", message: "Failed to connect to AI" })}\n\n`
     );
     res.end();
   }
 };
+
 
 
 /**
