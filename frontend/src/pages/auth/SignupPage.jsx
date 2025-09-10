@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/authProvider";
 import { validateForm as validate } from "@/utils/auth/validator";
 import ErrorMessage from "@/components/auth/ErrorMessage";
-import { Eye, EyeOff } from "lucide-react"; // install lucide-react if not added
+import { Eye, EyeOff } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -20,9 +20,9 @@ const SignupPage = () => {
   const [newErrors, setNewErrors] = useState({});
   const [profilePic, setProfilePic] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const { isSigningUp , signup }  =useAuthStore();
 
   const navigate = useNavigate();
-  const { signup } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,8 +56,8 @@ const SignupPage = () => {
 
 
   const validateForm = () => {
-    const newErrors = validate(formData, profilePic);
-    setNewErrors(newErrors);
+    const newErrorst = validate(formData, profilePic);
+    setNewErrors(newErrorst || {});
     return Object.keys(newErrors).length === 0;
   };
 
@@ -79,7 +79,8 @@ const SignupPage = () => {
       data.delete("confirmPassword");
 
       const response = await signup(data);
-      setNewErrors(response);
+
+      // Add toast error
 
     } catch (err) {
       console.error(err);
@@ -124,7 +125,7 @@ const SignupPage = () => {
               required
               className="w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
             />
-            {newErrors.lastName && <ErrorMessage message={newErrors.lastName} />}
+            {newErrors.lastName && <ErrorMessage message={"newErrors.lastName"} />}
           </div>
 
 

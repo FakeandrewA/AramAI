@@ -6,7 +6,9 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  return !!localStorage.getItem("authToken");
+});
   const navigate = useNavigate();
 
   const checkAuthStatus = () => {

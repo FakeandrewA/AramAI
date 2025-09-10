@@ -59,7 +59,8 @@ export const loginUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
         );
-        res.status(200).json({ token });
+        const safeUser = await User.findById(user._id).select("-password");
+        res.status(200).json({ token , user:safeUser });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/authProvider";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { isLoggingIn , login} = useAuthStore();
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -14,15 +15,18 @@ const LoginPage = () => {
     if (!formData.email.trim()) newErrors.email = "Username is required";
     if (!formData.password.trim()) newErrors.password = "Password is required";
     setErrors(newErrors);
+    
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!validateForm()) return;
-
+    
     try {
-      setLoading(true);
+      
       const response = await login(formData);
+      console.log(response)
       if(response.ok) navigate("/chat");
       else{
         setErrors({general: "Login failed. Please check your credentials." })
@@ -30,7 +34,6 @@ const LoginPage = () => {
     } catch (error) {
       setErrors({ general: "Login failed. Please check your credentials." });
     } finally {
-      setLoading(false);
     }
   };
 
@@ -87,10 +90,10 @@ const LoginPage = () => {
         {/* Login button */}
         <button
           onClick={handleSubmit}
-          disabled={loading}
+          disabled={isLoggingIn}
           className="mb-4 w-full rounded-[var(--corner-md)] bg-[var(--clr-primary-main)] px-4 py-3 font-medium text-[var(--clr-text-inverse)] shadow-[var(--shadow-soft)] transition hover:bg-[var(--clr-primary-accent)] disabled:opacity-60"
         >
-          {loading ? "Logging in..." : "Login"}
+          {isLoggingIn ? "Logging in..." : "Login"}
         </button>
 
         {/* Signup link */}
