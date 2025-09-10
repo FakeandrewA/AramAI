@@ -6,8 +6,25 @@ import os
 from rank_bm25 import BM25Okapi
 from retrieval.utils import get_relevant_points,get_client
 from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
-
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import PromptTemplate
+from pydantic import BaseModel,Field
 load_dotenv()
+
+class YesNoAnswer(BaseModel):
+    answer: str = Field(..., description="Must be either 'yes' or 'no'")
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash").with_structured_output(YesNoAnswer)
+
+rag_relevance_template = PromptTemplate.from_template("""You are legal assistant who excel in checking relevance of documents retrieved by the RAG with the users query.
+Your task is provide 'yes' if there is relevance or 'no'. dont generate anything else
+User Query: {query}                          
+Here is the Retrieved Context:
+{context}
+""")
+
+rag_relevance_chain = rag_relevance_template | llm
 
 def extract_tokens_with_bs4(text: str):
     """Extract tokens using BeautifulSoup, lowercase + simple split."""
@@ -19,9 +36,20 @@ def extract_tokens_with_bs4(text: str):
 
 @tool
 def rag_tool(query:str,rerank:bool,top_k:int,top_rerank_k:int):
-    """Use this tool to get relevant document chunks stored in our qdrant db for the user's query , restructure the user's query to get the most relevancy"""
+    """Use this tool to get relevant document chunks stored in our qdrant db for the user's query , restructure the user's query to get the most relevancy
+    unlike a search query , rag queries must be very descriptive even if the user gives a vague query, so the database can match a vector.
+    """
     client = get_client()
-    return get_relevant_points(query,client,COLLECTION_NAME,top_k,rerank,top_rerank_k)
+    retrieved_chunks = get_relevant_points(query,client,COLLECTION_NAME,top_k,rerank,top_rerank_k)
+    context=""
+    for i,chunk in enumerate(retrieved_chunks):
+        context += f"Chunk {i}\n\n"+chunk.split("Document Fragment:")[1]+"\n\n"
+    response = rag_relevance_chain.invoke({"query":query,"context":context}).answer
+    if response.lower() == "yes":
+        print("The LLM Said Yes")
+        return context
+    
+    return "No relevant Context Found in the VectorDatabase. Please Use Search Tool to Get Context" 
 
 @tool
 def indian_kannon_search_tool(query: str, pagenum: int = 1):

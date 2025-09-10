@@ -1,6 +1,6 @@
 from chatbot.schema import base_state
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate,MessagesPlaceholder
 from chatbot.tools import indian_kannon_search_tool,rag_tool
 from langgraph.prebuilt import ToolNode
 from langchain_tavily import TavilySearch
@@ -9,14 +9,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-tools = [rag_tool]
-
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
 
 def base_llm_node(state : base_state) -> base_state:
-    input_message = state["messages"][-1]
-    legal_advisor_prompt = ChatPromptTemplate.from_template("""
+    system_prompt = """
     You are a legal assistant specialized in Indian law. 
 Your role is to answer only queries related to Indian law (Constitution, Acts, Rules, Regulations, and case law).  
 
@@ -30,22 +27,23 @@ Instructions:
 
 2. When answering legal queries:
    - Always use the rag tool first to get locally saved and faster relevant information only rollback to internet search or anyother tool if the rag tool provides irrelevant context
+   - From the retrived context always use what is relevant for the user's query as the context may have irrelevant chunks
    - Always interpret them in the context of Indian jurisdiction.
    - Cite the exact statute, section, and year if applicable (e.g., "Section 420, Indian Penal Code, 1860").
    - If case law is relevant, use the case retrieval tool to fetch it and provide proper citation (e.g., case name, year, SCC citation). 
    - Do not invent case names or citations.
 
 3. End every response with: 
-   "Disclaimer: This information is for general guidance under Indian law and does not substitute professional legal advice from a licensed advocate."
-
-    User Query: {query}
-                                                            
+   "Disclaimer: This information is for general guidance under Indian law and does not substitute professional legal advice from a licensed advocate."                                     
     keep in mind always use the rag tool first if it fails to provide any relevant information then roll back to other tools
     Answer:
-    """)
+    """
+    legal_advisor_prompt = ChatPromptTemplate.from_messages([("system",system_prompt),
+    MessagesPlaceholder(variable_name="messages")])
+
     llm_with_tools = llm.bind_tools(tools=tools)
     legal_advisor_chain =  legal_advisor_prompt | llm_with_tools
-    response = legal_advisor_chain.invoke({"query" : input_message})
+    response = legal_advisor_chain.invoke({"messages":state["messages"]})
     return {
         "messages" : response
     }
@@ -89,11 +87,8 @@ def tool_node(state):
             )
         elif tool_name == "rag_tool":
             
-            retrieved_chunks = rag_tool.ainvoke(tool_args)
-            context = ""
-            for i,chunk in enumerate(retrieved_chunks):
-                context += f"Chunk {i}\n\n"+chunk.split("Document Fragment:")[1]+"\n\n"
-        
+            context = rag_tool.ainvoke(tool_args)
+    
             tool_message = ToolMessage(
                 content = context,
                 tool_call_id = tool_id,
