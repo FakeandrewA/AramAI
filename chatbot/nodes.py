@@ -7,13 +7,7 @@ from langchain_tavily import TavilySearch
 from langchain_core.messages import ToolMessage
 from dotenv import load_dotenv
 
-load_dotenv()
-
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-
-
-async def base_llm_node(state : base_state) -> base_state:
-    system_prompt = """
+system_prompt = """
     You are a legal assistant specialized in Indian law. 
 Your role is to answer only queries related to Indian law (Constitution, Acts, Rules, Regulations, and case law).  
 
@@ -38,19 +32,28 @@ Instructions:
     keep in mind always use the rag tool first if it fails to provide any relevant information then roll back to other tools
     Answer:
     """
+
+load_dotenv()
+
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+
+search_tool = TavilySearch(
+    max_results=4,
+)
+
+async def model(state : base_state) -> base_state:
+    
     legal_advisor_prompt = ChatPromptTemplate.from_messages([("system",system_prompt),
     MessagesPlaceholder(variable_name="messages")])
 
     llm_with_tools = llm.bind_tools(tools=tools)
     legal_advisor_chain =  legal_advisor_prompt | llm_with_tools
-    response = legal_advisor_chain.ainvoke({"messages":state["messages"]})
+    response = await legal_advisor_chain.ainvoke({"messages":state["messages"]})
     return {
         "messages" : response
     }
 
-search_tool = TavilySearch(
-    max_results=4,
-)
+
 
 async def tool_node(state):
     """Custom tool node that handles tool calls from the LLM."""
@@ -66,7 +69,7 @@ async def tool_node(state):
         
         if tool_name == "tavily_search_results_json":
 
-            search_results = search_tool.ainvoke(tool_args)
+            search_results = await search_tool.ainvoke(tool_args)
             
             tool_message = ToolMessage(
                 content=str(search_results),
@@ -78,7 +81,7 @@ async def tool_node(state):
         
         elif tool_name == "indian_kannon_search_tool":
 
-            search_results = indian_kannon_search_tool.ainvoke(tool_args)
+            search_results = await indian_kannon_search_tool.ainvoke(tool_args)
 
             tool_message = ToolMessage(
                 content = search_results,
@@ -87,7 +90,7 @@ async def tool_node(state):
             )
         elif tool_name == "rag_tool":
             
-            context = rag_tool.ainvoke(tool_args)
+            context = await rag_tool.ainvoke(tool_args)
     
             tool_message = ToolMessage(
                 content = context,
