@@ -121,7 +121,7 @@ const MessageArea = ({ messages }) => {
       <div className=" mx-auto p-6">
         {messages.map((message) => (
           <div
-            key={message.id}
+            key={message._id}
             className={`flex ${
               message.isUser ? "justify-end" : "justify-start"
             } mb-5`}

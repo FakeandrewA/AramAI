@@ -2,10 +2,11 @@ import mongoose from "mongoose";
 
 const chatSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+  name: { type: String, required: true },
   messages: [
     {
       role: { type: String, enum: ["user", "ai"], required: true },
-      name: { type: String, required: true },
       searchInfo: {
         stages: [String],
         query: String,

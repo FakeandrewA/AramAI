@@ -2,25 +2,33 @@ import ChatList from "@/components/chat/ChatList";
 import Header from "../components/chat/Header";
 import InputBar from "@/components/chat/InputBar";
 import MessageArea from "@/components/chat/MessageArea";
-import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Navigate, useParams } from "react-router-dom";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const ChatPage = () => {
-    const { chatId } = useParams();
-    console.log("Current chat id:", chatId);
-    const [messages, setMessages] = useState([
-        {
-            id: 1,
-            content: "Hi there, how can I help you?",
-            isUser: false,
-            type: "message",
-        },
-    ]);
 
-      const chats = [
-    { chatId: "1", name: "Chat - 9/9/2025 10:45 AM", _id: "4321" },
-    { chatId: "2", name: "Chat - 9/9/2025 11:15 AM", _id: "1234" },
-  ];
+    const { authUser, getMessages, createChat } = useAuthStore();
+    const chats = authUser.chats;
+    const [messages, setMessages] = useState([]);
+    let { chatId } = useParams();
+    if (chatId == null) {
+        return <Navigate to='/onBoarding' />;
+    }
+    // console.log("Current chat id:", chatId);
+    useEffect(() => {
+        // console.log("chatId", chatId);
+        const fetchMessages = async () => {
+            try {
+                const msgs = await getMessages(chatId);
+                setMessages(msgs.messages);
+            } catch (err) {
+                console.error("Failed to fetch messages:", err);
+            }
+        };
+
+        if (chatId) fetchMessages();
+    }, [chatId]);
 
 
     const [currentMessage, setCurrentMessage] = useState("");
@@ -50,6 +58,7 @@ const ChatPage = () => {
                 setMessages((prev) => [
                     ...prev,
                     {
+
                         id: aiResponseId,
                         content: "",
                         isUser: false,
@@ -62,8 +71,13 @@ const ChatPage = () => {
                         },
                     },
                 ]);
-
-                let url = `http://localhost:5000/api/chats/send?chatId=YOUR_CHAT_ID&query=${encodeURIComponent(userInput)}`;
+                const message = {
+                    userId: authUser._id,
+                    chatId: chatId,
+                    query: userInput,
+                    messageId: aiResponseId
+                };
+                let url = `http://localhost:5000/api/chats/send?chatId=${chatId}&query=${encodeURIComponent(message)}`;
                 if (checkpointId) {
                     url += `&checkpoint_id=${encodeURIComponent(checkpointId)}`;
                 }
@@ -222,42 +236,37 @@ const ChatPage = () => {
         }
     };
 
-    const onNewChat = async () => {
-        const newChat = await fetch("http://localhost:5000/api/chats/create");
-        if(!newChat.ok){
 
-        }
 
-    };
 
     return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Top Header */}
-      <Header />
+        <div className="flex flex-col min-h-screen bg-background">
+            {/* Top Header */}
+            <Header />
 
-      {/* Main content area (below header) */}
-      <div className="flex flex-1">
-        {/* Left side: messages + input */}
-        <div className="flex-1 flex flex-col bg-[var(--gradient-primary)] shadow-lg border-r border-border">
-          <MessageArea messages={messages} />
-          <InputBar
-            currentMessage={currentMessage}
-            setCurrentMessage={setCurrentMessage}
-            onSubmit={handleSubmit}
-          />
-        </div>
+            {/* Main content area (below header) */}
+            <div className="flex flex-1">
+                {/* Left side: messages + input */}
+                <div className="flex-1 flex flex-col bg-[var(--gradient-primary)] shadow-lg border-r border-border">
+                    <MessageArea messages={messages}/>
+                    <InputBar
+                        currentMessage={currentMessage}
+                        setCurrentMessage={setCurrentMessage}
+                        onSubmit={handleSubmit}
+                    />
+                </div>
 
-        {/* Right side: chat list */}
-        <div className="w-72 border-l border-border">
-          <ChatList
-            chats={chats}
-            onNewChat={() => console.log("New chat")}
-            onSelectChat={(id) => console.log("Open chat", id)}
-          />
+                {/* Right side: chat list */}
+                <div className="w-72 border-l border-border">
+                    <ChatList
+                        chats={authUser.chats}
+                        onNewChat={createChat}
+                        userId={authUser._id}
+                    />
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default ChatPage;

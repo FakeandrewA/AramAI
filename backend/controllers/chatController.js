@@ -8,11 +8,11 @@ import { generateChatName } from "../utils.js";
 export const createChat = async (req, res) => {
   try {
     const { userId } = req.body;
-
+    const name = generateChatName();
     // create chat with default AI message
     const chat = await Chat.create({
       user: userId,
-      name: generateChatName(),
+      name: name,
       messages: [
         {
           role: "ai",

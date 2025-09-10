@@ -80,7 +80,7 @@ const SignupPage = () => {
 
       const response = await signup(data);
 
-      // Add toast error
+      navigate('/login');
 
     } catch (err) {
       console.error(err);

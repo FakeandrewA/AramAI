@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 
 export const useAuthStore = create((set) => ({
   authUser: null,
-  isLoggingIn:false,
-  isSigningUp:false,
-  isCheckingAuth:true,
-  showMyProfile:false,
-  setShowMyProfile:() => set(state => ({ showMyProfile: !state.showMyProfile })),
-  login: async (credentials) =>{
+  isLoggingIn: false,
+  isSigningUp: false,
+  isCheckingAuth: true,
+  showMyProfile: false,
+  setShowMyProfile: () => set(state => ({ showMyProfile: !state.showMyProfile })),
+  login: async (credentials) => {
     console.log(credentials)
-    set({isLoggingIn:true})
+    set({ isLoggingIn: true })
     try {
       const response = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
@@ -20,32 +20,32 @@ export const useAuthStore = create((set) => ({
       });
       const result = await response.json();
       if (!response.ok) {
-        set({isLoggingIn:false})
+        set({ isLoggingIn: false })
         const errorData = result.catch(() => ({}));
         throw new Error(errorData.message || "Login failed");
       }
       console.log(result.user)
       if (result.token) {
         localStorage.setItem("authToken", result.token);
-        set({authUser:result.user}) 
+        set({ authUser: result.user })
       }
       return response
     } catch (err) {
       console.error("Login error:", err);
     }
-    finally{
-      set({isLoggingIn:false})
+    finally {
+      set({ isLoggingIn: false })
     }
 
   },
-  signup: async (formData) =>{
-    set({isSigningUp:true})
+  signup: async (formData) => {
+    set({ isSigningUp: true })
     try {
       const options = { method: "POST" };
-      if(formData instanceof FormData) {
+      if (formData instanceof FormData) {
         options.body = formData;
       }
-      else{
+      else {
         options.headers = { "Content-Type": "application/json" };
         options.body = JSON.stringify(formData);
       }
@@ -53,7 +53,7 @@ export const useAuthStore = create((set) => ({
       const response = await fetch("http://localhost:5000/api/users/register", options);
 
       if (!response.ok) {
-        set({isSigningUp:false})
+        set({ isSigningUp: false })
         const errorData = await response.json().catch(() => ({}));
         return errorData;
       }
@@ -61,46 +61,102 @@ export const useAuthStore = create((set) => ({
     } catch (err) {
       console.error("Signup error:", err);
     }
-    finally{
-      set({isSigningUp:false})
+    finally {
+      set({ isSigningUp: false })
     }
   },
-  logout: async() =>{
+  logout: async () => {
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
     navigate("/");
 
   },
-  checkAuth: async () =>{
+  checkAuth: async () => {
     try {
       const token = localStorage.getItem("authToken");
-      if (!token){
+      if (!token) {
         return;
       }
       const response = await fetch("http://localhost:5000/api/users/profile", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`, // send token in Authorization header
-      },
-    });
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // send token in Authorization header
+        },
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Failed to fetch profile");
-    }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch profile");
+      }
 
-    const profile = await response.json();
-    console.log(profile)
-    set({authUser : profile})
+      const profile = await response.json();
+      console.log(profile)
+      set({ authUser: profile })
 
     } catch (error) {
       console.log(error)
     }
-    finally{
-      set({isCheckingAuth:false})
+    finally {
+      set({ isCheckingAuth: false })
     }
 
 
-  }
+  },
+  getMessages: async (chatId) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        return;
+      }
+      const response = await fetch(`http://localhost:5000/api/chats/${chatId}/messages`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // send token in Authorization header
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch messages");
+      }
+
+      const messages = await response.json();
+      return messages;
+
+    } catch (error) {
+      console.log(error)
+    }
+  },
+  createChat: async (userId) => {
+try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        return;
+      }
+      const response = await fetch(`http://localhost:5000/api/chats/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // send token in Authorization header
+        },
+        body: JSON.stringify({
+          userId: userId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to create chat");
+      }
+      const chat = await response.json();
+      set({ authUser: (prev)=>{prev.chats = [chat, ...prev.chats]} })
+      return chat;
+
+    } catch (error) {
+      console.log(error)
+    }
+}
 }));
+
