@@ -30,7 +30,8 @@ export const registerUser = async (req, res) => {
             profilePic: profilePicUrl,
             email,
             password: hashedPassword,
-            role
+            role,
+            chats: []
         });
         await newUser.save();
         res.status(201).json({ message: 'User registered successfully' });

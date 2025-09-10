@@ -5,13 +5,14 @@ const chatSchema = new mongoose.Schema({
   messages: [
     {
       role: { type: String, enum: ["user", "ai"], required: true },
+      name: { type: String, required: true },
       searchInfo: {
-            stages: [String],
-            query: String,
-            urls: [String],
+        stages: [String],
+        query: String,
+        urls: [String],
       },
       content: { type: String, required: true },
-      messageid: {Number}
+      messageid: { Number }
     }
   ]
 }, { timestamps: true });
