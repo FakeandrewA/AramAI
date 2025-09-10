@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "npm run dev"
+    "dev": "node --env-file .env --watch index.js"
   },
   "repository": {
     "type": "module",

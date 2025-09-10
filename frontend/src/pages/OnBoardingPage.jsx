@@ -7,7 +7,7 @@ import OnboardingCTA from '@/components/onboarding/OnboardingCTA'
 
 const OnBoardingPage = () => {
   return (
-    <div className='w-full h-full '>
+    <div className='w-[100vw] min-h-[100vh] '>
         <Background/>
         <Navbar/>
         <Hero/>

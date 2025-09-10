@@ -9,7 +9,7 @@ import chatRoutes from './routes/chatRoutes.js';
 const app = express();
 dotenv.config();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mydatabase';
+const MONGO_URI = process.env.MONGO_DEV_URI || 'mongodb://localhost:27017/AramAI';
 
 
 app.use(cors());
