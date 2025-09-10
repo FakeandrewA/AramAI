@@ -44,7 +44,7 @@ const VerticalNavbar = () => {
     <motion.div
       animate={{ width: collapsed ? 80 : 260 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="h-screen fixed flex flex-col justify-between overflow-x-hidden overflow-y-auto
+      className="h-screen fixed top-0 left-0 z-50 flex flex-col justify-between overflow-x-hidden overflow-y-auto
                  dark:bg-sidebar/30 bg-sidebar/20 backdrop-blur shadow-lg py-6 px-3 rounded-r-2xl "
     >
       {/* Top Section */}

@@ -1,6 +1,5 @@
-import Chat from "../models/Chat.js";
-import User from "../models/User.js";
-import fetch from "node-fetch"; // for calling AI API
+import Chat from "../models/chatModel.js";
+import User from "../models/userModel.js";
 import { generateChatName } from "../utils.js";
 
 /**
