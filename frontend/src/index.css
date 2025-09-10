@@ -43,17 +43,6 @@
   --color-emerald-main: var(--clr-emerald);
   --font-goldman: var(--font-heading);
   --font-outfit: var(--font-body);
-  --color-success: var(--clr-success);
-  --color-success-foreground: var(--clr-success-foreground);
-
-  --color-warning: var(--clr-warning);
-  --color-warning-foreground: var(--clr-warning-foreground);
-
-  --color-info: var(--clr-info);
-  --color-info-foreground: var(--clr-info-foreground);
-
-  --color-neutral: var(--clr-neutral);
-  --color-neutral-foreground: var(--clr-neutral-foreground);
 
 }
 
@@ -93,22 +82,6 @@
 
   /* own variables */
 
-    /* Semantic Colors */
-  --clr-success: #22C55E; /* green */
-  --clr-success-foreground: #FFFFFF;
-  --gradient-header: to right, #4b3d66, #3a325a;
-  --gradient-accent: to right, #0d9488, #0f766e;
-
-  --clr-warning: #FACC15; /* amber */
-  --clr-warning-foreground: #000000;
-
-  --clr-info: #3B82F6; /* blue */
-  --clr-info-foreground: #FFFFFF;
-
-  --clr-neutral: #9CA3AF; /* gray */
-  --clr-neutral-foreground: #111827;
-
-
    /* Typography */
   --font-heading: "Goldman", sans-serif;
   --font-body: "Outfit", sans-serif;
@@ -132,7 +105,6 @@
   /* Gradients */
   --gradient-brand: linear-gradient(360deg, #686161 25%, #FFFFFF 84.14%);
   --gradient-heading: linear-gradient(360deg, #D3D3D3 25%, #313131 84.14%);
-  --chat-gradient: 360deg, #D3D3D3 25%, #313131 84.14%;
 
   /* Radius */
   --corner-sm: 4px;
@@ -180,24 +152,6 @@
   --sidebar-ring: oklch(0.556 0 0);
 
     /* own variables */
-
-      /* Semantic Colors (Dark Mode) */
-  --clr-success: #16A34A; /* darker green */
-  --clr-success-foreground: #FFFFFF;
-  
-  --gradient-header: to right, #3a325a, #4b3d66;
-  --gradient-accent: to right, #0d9488, #0f766e;
-
-
-  --clr-warning: #EAB308; /* rich amber */
-  --clr-warning-foreground: #000000;
-
-  --clr-info: #2563EB; /* stronger blue */
-  --clr-info-foreground: #FFFFFF;
-
-  --clr-neutral: #6B7280; /* muted gray */
-  --clr-neutral-foreground: #F3F4F6;
-
   
   --clr-emerald:#10B981;
   --clr-bg-main: #121212;
@@ -216,7 +170,6 @@
 
   --gradient-brand: linear-gradient(360deg, #313131 25%, #D3D3D3 84.14%);
   --gradient-heading: linear-gradient(360deg, #FFFFFF 25%, #686161 84.14%);
-  --chat-gradient: 360deg, #FFFFFF 25%, #686161 84.14%;
 
 
 }
@@ -253,10 +206,6 @@ body{
   @apply bg-gradient-to-r from-[#10B981] to-[#338066] bg-clip-text text-transparent;
 }
 
-@utility text-primary{
-  color: var(--clr-text-inverse);
-}
-
 .scroll-section-outer{
   overflow: hidden;
   
@@ -290,6 +239,5 @@ body{
   scrollbar-width: thin;           /* makes it thinner */
   scrollbar-color: var(--secondary-) var(--border); /* thumb color | track color */
 }
-
 
 
