@@ -215,7 +215,7 @@ const ChatPage = () => {
 
     return (
         <div className="w-full flex justify-center bg-background min-h-screen">
-            <div className="w-full bg-[var(--gradient-primary)] flex flex-col rounded-xl shadow-lg border border-border overflow-hidden">
+            <div className="w-full bg-[var(--gradient-primary)] flex flex-col  shadow-lg border border-border overflow-hidden">
                 <Header />
                 <MessageArea messages={messages} />
                 <InputBar

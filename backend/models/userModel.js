@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
-        password: {
+    password: {
         type: String,
         required: true,
         minlength: 8,
@@ -52,6 +52,12 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    chats: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Chat"
+        }
+    ],
     createdAt: {
         type: Date,
         default: Date.now
