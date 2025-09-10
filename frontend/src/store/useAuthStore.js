@@ -130,33 +130,41 @@ export const useAuthStore = create((set) => ({
     }
   },
   createChat: async (userId) => {
-try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        return;
-      }
-      const response = await fetch(`http://localhost:5000/api/chats/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, // send token in Authorization header
-        },
-        body: JSON.stringify({
-          userId: userId
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to create chat");
-      }
-      const chat = await response.json();
-      set({ authUser: (prev)=>{prev.chats = [chat, ...prev.chats]} })
-      return chat;
-
-    } catch (error) {
-      console.log(error)
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      return;
     }
+
+    const response = await fetch(`http://localhost:5000/api/chats/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to create chat");
+    }
+
+    const chat = await response.json();
+
+    // ✅ Update state correctly
+    set((state) => ({
+      authUser: {
+        ...state.authUser,
+        chats: [chat, ...(state.authUser?.chats || [])],
+      },
+    }));
+
+    return chat; // ✅ important so you can navigate right away
+  } catch (error) {
+    console.error("Error creating chat:", error);
+  }
 }
+
 }));
 
