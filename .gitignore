@@ -218,6 +218,8 @@ united_nations_convection.json
 bm25_index.pkl
 chunk_id_to_doc.json
 snapshots
+checkpoint.sqlite*
+
 #personal_experiments
 *_test.ipynb
 *_test.py

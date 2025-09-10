@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat Stream Demo (GET)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    #messages {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      background: white;
+      margin-bottom: 10px;
+    }
+    .msg {
+      margin: 5px 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+    .user {
+      background: #d1e7dd;
+      text-align: right;
+    }
+    .bot {
+      background: #f8d7da;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h2>Chat Stream (GET)</h2>
+
+  <div id="messages"></div>
+
+  <input type="text" id="inputMessage" placeholder="Type your message" style="width: 80%;" />
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    function sendMessage() {
+      const input = document.getElementById("inputMessage");
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user");
+      input.value = "";
+
+      // Close any previous stream
+      if (window.evtSource) {
+        window.evtSource.close();
+      }
+
+      // Encode message so it’s safe in URL
+      const url = `http://127.0.0.1:8000/chat_stream/${encodeURIComponent(message)}`;
+      window.evtSource = new EventSource(url);
+
+      window.evtSource.onmessage = function(event) {
+        try {
+          const data = JSON.parse(event.data);
+          handleEvent(data);
+        } catch (err) {
+          console.error("Bad JSON:", event.data, err);
+        }
+      };
+
+      window.evtSource.onerror = function(err) {
+        console.error("EventSource failed:", err);
+        window.evtSource.close();
+      };
+    }
+
+    function handleEvent(data) {
+      if (data.type === "content") {
+        addMessage(data.content, "bot");
+      } else if (data.type === "checkpoint") {
+        console.log("Checkpoint ID:", data.checkpoint_id);
+      } else if (data.type === "search_start") {
+        addMessage("Searching: " + data.query, "bot");
+      } else if (data.type === "search_results") {
+        addMessage("Results: " + data.urls.join(", "), "bot");
+      } else if (data.type === "end") {
+        console.log("Stream ended");
+      }
+    }
+
+    function addMessage(text, sender) {
+      const messagesDiv = document.getElementById("messages");
+      const msg = document.createElement("div");
+      msg.className = "msg " + sender;
+      msg.textContent = text;
+      messagesDiv.appendChild(msg);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>

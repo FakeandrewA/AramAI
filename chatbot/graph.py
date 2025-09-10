@@ -1,39 +1,34 @@
-from schema import base_state
+# new file or replace chatbot/graph.py contents that create `app`
+from chatbot.schema import base_state
 from langgraph.graph import StateGraph, END
-from nodes import indian_kannon_search_tool_node, base_llm_node
+from chatbot.nodes import tool_node, model
 from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+import aiosqlite
 
-graph = StateGraph(base_state)
+config = {"configurable": {"thread_id": 12345}}
 
-graph.add_node("base_llm_node", base_llm_node)
-graph.add_node("tool_node", indian_kannon_search_tool_node)
+async def create_app_async():
+    conn = await aiosqlite.connect("checkpoint.sqlite")
+    memory = AsyncSqliteSaver(conn)
 
-graph.set_entry_point("base_llm_node")
+    graph = StateGraph(base_state)
+    graph.add_node("model", model)
+    graph.add_node("tool_node", tool_node)
+    graph.set_entry_point("model")
 
+    def should_use_tool(state : base_state):
+        last_message = state["messages"][-1]
+        if (hasattr(last_message, "tool_calls") and len(last_message.tool_calls) > 0):
+            return "use_tools"
+        return "no_tools"
 
-def should_use_tool(state : base_state):
-    last_message = state["messages"][-1]
-    if (hasattr(last_message, "tool_calls") and len(last_message.tool_calls) > 0):
-        return "use_tools"
-    return "no_tools"
+    graph.add_edge("tool_node", "model")
+    graph.add_conditional_edges("model", should_use_tool, path_map={
+        "use_tools": "tool_node",
+        "no_tools": END
+    })
 
+    app = graph.compile(checkpointer=memory)
+    return app, conn  # Return the connection
 
-
-graph.add_edge("tool_node", "base_llm_node")
-graph.add_conditional_edges("base_llm_node", should_use_tool, path_map={
-    "use_tools" : "tool_node",
-    "no_tools" : END
-})
-
-app = graph.compile()
-
-
-diagram = app.get_graph().draw_mermaid_png()
-
-with open("graph.png","wb") as f:
-    f.write(diagram)
-
-response = app.invoke(input = {
-    "messages" : [HumanMessage(content="what happened in the case happened between nandha kumar and lg")]
-})
-print(response)
