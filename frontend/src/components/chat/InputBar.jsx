@@ -11,7 +11,7 @@ const InputBar = ({ currentMessage, setCurrentMessage, onSubmit }) => {
         {/* Emoji / Icon button */}
         <button
           type="button"
-          className="hidden p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
+          className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
         >
           <svg
             className="w-6 h-6"
@@ -35,13 +35,13 @@ const InputBar = ({ currentMessage, setCurrentMessage, onSubmit }) => {
           placeholder="Type a message"
           value={currentMessage}
           onChange={handleChange}
-          className="flex-grow px-8 py-2 bg-transparent focus:outline-none text-foreground placeholder:text-muted-foreground"
+          className="flex-grow px-4 py-2 bg-transparent focus:outline-none text-foreground placeholder:text-muted-foreground"
         />
 
         {/* Attachment / Link button */}
         <button
           type="button"
-          className="hidden p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-all duration-200"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-all duration-200"
         >
           <svg
             className="w-6 h-6"

@@ -4,7 +4,6 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes.js';
-import chatRoutes from './routes/chatRoutes.js';
 
 const app = express();
 dotenv.config();
@@ -26,7 +25,6 @@ app.listen(PORT, () => {
 });
 
 app.use('/api/users', userRoutes);
-app.use("/api/chats", chatRoutes);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
