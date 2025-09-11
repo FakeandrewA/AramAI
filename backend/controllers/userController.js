@@ -1,6 +1,8 @@
 import User from '../models/userModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import path from 'path';
+import fs from 'fs';
 
 export const registerUser = async (req, res) => {
     try {
@@ -73,7 +75,7 @@ export const loginUser = async (req, res) => {
         }));
 
 
-        res.status(200).json({ token, user: {...obj, chats: chats} });
+        res.status(200).json({ token, user: { ...obj, chats: chats } });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -97,7 +99,7 @@ export const getUserProfile = async (req, res) => {
             name: chat.name,
             createdAt: chat.createdAt,
         }));
-        res.status(200).json({...obj,chats: chats});
+        res.status(200).json({ ...obj, chats: chats });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -107,15 +109,45 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
     try {
         const updates = req.body;
-        const user = await User.findByIdAndUpdate(req.user.userId, updates, { new: true }).select('-password');
+        const file = req.file;
+
+        // Find user
+        const user = await User.findById(req.user.userId);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json(user);
+
+        // If new profile pic uploaded → delete old one
+        let profilePicUrl = user.profilePic; // keep old if no new one
+        if (file) {
+            if (user.profilePic) {
+                // old file path relative to uploads/
+                const oldPath = path.join(
+                    process.cwd(),
+                    "uploads",
+                    path.basename(user.profilePic)
+                );
+                if (fs.existsSync(oldPath)) {
+                    fs.unlinkSync(oldPath); // delete old file
+                }
+            }
+            profilePicUrl = `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
+        }
+
+        // Apply updates
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.userId,
+            { ...updates, profilePic: profilePicUrl },
+            { new: true }
+        ).select("-password");
+
+        res.status(200).json(updatedUser);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
 
 export const updatePassword = async (req, res) => {
     try {

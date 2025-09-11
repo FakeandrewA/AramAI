@@ -130,41 +130,78 @@ export const useAuthStore = create((set) => ({
     }
   },
   createChat: async (userId) => {
-  try {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      return;
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/chats/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to create chat");
+      }
+
+      const chat = await response.json();
+
+      // ✅ Update state correctly
+      set((state) => ({
+        authUser: {
+          ...state.authUser,
+          chats: [chat, ...(state.authUser?.chats || [])],
+        },
+      }));
+
+      return chat; // ✅ important so you can navigate right away
+    } catch (error) {
+      console.error("Error creating chat:", error);
     }
+  },
+  updateProfile: async (updates) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
 
-    const response = await fetch(`http://localhost:5000/api/chats/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ userId }),
-    });
+      // Prepare FormData for file upload
+      const formData = new FormData();
+      if (updates.firstName) formData.append("firstName", updates.firstName);
+      if (updates.lastName) formData.append("lastName", updates.lastName);
+      if (updates.age) formData.append("age", updates.age);
+      if (updates.profilePic) formData.append("profilePic", updates.profilePic);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Failed to create chat");
+      const response = await fetch("http://localhost:5000/api/users/updateProfile", {
+        method: "PATCH", // PUT is correct for updates
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+
+      const updatedUser = await response.json();
+
+      // Update authUser in store
+      set({ authUser: updatedUser });
+
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
     }
-
-    const chat = await response.json();
-
-    // ✅ Update state correctly
-    set((state) => ({
-      authUser: {
-        ...state.authUser,
-        chats: [chat, ...(state.authUser?.chats || [])],
-      },
-    }));
-
-    return chat; // ✅ important so you can navigate right away
-  } catch (error) {
-    console.error("Error creating chat:", error);
   }
-}
+
 
 }));
 

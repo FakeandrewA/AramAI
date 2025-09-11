@@ -1,11 +1,12 @@
-import { useAuthStore } from '@/store/useAuthStore'
-import { Camera, X } from 'lucide-react'
-import React, { useState } from 'react'
+import { useAuthStore } from '@/store/useAuthStore';
+import { Camera, X } from 'lucide-react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const MyProfile = () => {
-  const { setShowMyProfile, authUser, logout } = useAuthStore();
+  const { setShowMyProfile, authUser, logout, updateProfile } = useAuthStore();
   const [isProfileChanged, setIsProfileChanged] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -23,14 +24,25 @@ const MyProfile = () => {
   const handleChange = (e) => {
     setIsProfileChanged(true);
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = () => {
+  const handleImageChange = (e) => {
     setIsProfileChanged(true);
+    if (e.target.files && e.target.files[0]) {
+      setSelectedImage(e.target.files[0]);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!isProfileChanged) return;
+    try {
+      await updateProfile({ ...formdata, profilePic: selectedImage });
+      setIsProfileChanged(false);
+      setShowMyProfile();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   return (
@@ -38,10 +50,7 @@ const MyProfile = () => {
       <div className="md:w-150 w-full min-h-[80vh] max-h-[80vh] bg-background rounded-3xl px-5 py-5 relative overflow-y-auto md:px-10">
         {/* Close Button */}
         <div className="w-full flex justify-end">
-          <button
-            onClick={setShowMyProfile}
-            className="p-3 bg-sidebar rounded-full cursor-pointer"
-          >
+          <button onClick={setShowMyProfile} className="p-3 bg-sidebar rounded-full cursor-pointer">
             <X />
           </button>
         </div>
@@ -59,14 +68,11 @@ const MyProfile = () => {
           <div className="flex flex-col items-center gap-3 mb-10">
             <div className="relative w-32 h-32 rounded-full border-4 border-foreground/70 flex items-center justify-center bg-transparent">
               <img
-                src={authUser?.profilePic || "./images/user.jpeg"}
+                src={selectedImage ? URL.createObjectURL(selectedImage) : authUser?.profilePic || "./images/user.jpeg"}
                 alt="avatar"
                 className="w-28 h-28 rounded-full object-cover border border-gray-300 dark:border-gray-600"
               />
-              <label
-                htmlFor="avatarUpload"
-                className="absolute bottom-1 -right-1 bg-[#10B981] text-white p-2 rounded-full cursor-pointer shadow-md hover:scale-105 transition"
-              >
+              <label htmlFor="avatarUpload" className="absolute bottom-1 -right-1 bg-[#10B981] text-white p-2 rounded-full cursor-pointer shadow-md hover:scale-105 transition">
                 <Camera className="h-5 w-5" strokeWidth={2.75} />
               </label>
               <input
@@ -79,27 +85,26 @@ const MyProfile = () => {
             </div>
           </div>
 
-          {/* Name Field */}
+          {/* Name Fields */}
           <div className="flex w-full items-center py-4 gap-3 border-b border-border">
-  <p className="font-medium w-32">Name</p>
-  <div className="flex flex-1 gap-3">
-    <input
-      type="text"
-      name="firstName"
-      onChange={handleChange}
-      className="w-1/2 bg-sidebar border border-border py-2 rounded px-2"
-      value={formdata.firstName}
-    />
-    <input
-      type="text"
-      name="lastName"
-      onChange={handleChange}
-      className="w-1/2 bg-sidebar border border-border py-2 rounded px-2"
-      value={formdata.lastName}
-    />
-  </div>
-</div>
-
+            <p className="font-medium w-32">Name</p>
+            <div className="flex flex-1 gap-3">
+              <input
+                type="text"
+                name="firstName"
+                onChange={handleChange}
+                className="w-1/2 bg-sidebar border border-border py-2 rounded px-2"
+                value={formdata.firstName}
+              />
+              <input
+                type="text"
+                name="lastName"
+                onChange={handleChange}
+                className="w-1/2 bg-sidebar border border-border py-2 rounded px-2"
+                value={formdata.lastName}
+              />
+            </div>
+          </div>
 
           {/* Age Field */}
           <div className="flex w-full justify-between py-4 gap-3 border-b border-border items-center">
@@ -128,7 +133,7 @@ const MyProfile = () => {
             </div>
           </div>
 
-          {/* Mobile No Field */}
+          {/* Mobile Field */}
           <div className="flex w-full justify-between py-4 gap-3 border-b border-border items-center">
             <p className="font-medium w-32">Mobile No</p>
             <div className="flex-1">
@@ -143,22 +148,13 @@ const MyProfile = () => {
 
           {/* Account Info */}
           <div className="w-full mt-20">
-            <h2 className="text-[17px] font-medium pb-4">
-              Account Information
-            </h2>
+            <h2 className="text-[17px] font-medium pb-4">Account Information</h2>
             <div className="w-full flex items-center border-b py-2 justify-between">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Member since
-              </p>
-              <p className="text-xs">
-                {new Date(authUser?.createdAt).toLocaleDateString()}
-              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Member since</p>
+              <p className="text-xs">{new Date(authUser?.createdAt).toLocaleDateString()}</p>
             </div>
-
             <div className="w-full flex items-center py-2 justify-between">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Account Status
-              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Account Status</p>
               <p className="text-sm font-medium text-green-500">Active</p>
             </div>
           </div>
@@ -173,13 +169,11 @@ const MyProfile = () => {
 
           {/* Save & Cancel */}
           <div className="mt-10 w-full flex justify-end gap-6">
-            <button
-              onClick={setShowMyProfile}
-              className="px-4 py-1 border-2 border-border rounded-lg hover:opacity-80"
-            >
+            <button onClick={setShowMyProfile} className="px-4 py-1 border-2 border-border rounded-lg hover:opacity-80">
               Cancel
             </button>
             <button
+              onClick={handleSave}
               disabled={!isProfileChanged}
               className="px-4 py-1 bg-foreground text-background rounded-lg hover:opacity-80 disabled:cursor-no-drop disabled:opacity-50"
             >
