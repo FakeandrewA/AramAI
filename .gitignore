@@ -208,11 +208,20 @@ marimo/_lsp/
 __marimo__/
 
 
-#datas
+#data
 constitution_and_amendments.json
 international_treaty_act.json
 union_law.json
 united_nations_convection.json
+*-act.json
+*_data.json
+*_db
+bm25_index.pkl
+chunk_id_to_doc.json
+snapshots
+checkpoint.sqlite*
 
 #personal_experiments
-api_test.ipynb
+*_test.ipynb
+*_test.py
+experiments
