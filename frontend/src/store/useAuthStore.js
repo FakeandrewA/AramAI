@@ -10,7 +10,7 @@ export const useAuthStore = create((set) => ({
   showMyProfile: false,
   setShowMyProfile: () => set(state => ({ showMyProfile: !state.showMyProfile })),
   login: async (credentials) => {
-    console.log(credentials)
+    // console.log(credentials)
     set({ isLoggingIn: true })
     try {
       const response = await fetch("http://localhost:5000/api/users/login", {
@@ -21,15 +21,15 @@ export const useAuthStore = create((set) => ({
       const result = await response.json();
       if (!response.ok) {
         set({ isLoggingIn: false })
-        const errorData = result.catch(() => ({}));
+        const errorData = result.json().catch(() => ({}));
         throw new Error(errorData.message || "Login failed");
       }
-      console.log(result.user)
       if (result.token) {
         localStorage.setItem("authToken", result.token);
-        set({ authUser: result.user })
+        set({ authUser: result.user });
+        console.log(result.user);
       }
-      return response
+      return response;
     } catch (err) {
       console.error("Login error:", err);
     }
@@ -91,7 +91,7 @@ export const useAuthStore = create((set) => ({
       }
 
       const profile = await response.json();
-      console.log(profile)
+      // console.log(profile)
       set({ authUser: profile })
 
     } catch (error) {

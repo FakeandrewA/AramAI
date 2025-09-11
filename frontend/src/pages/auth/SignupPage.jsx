@@ -79,8 +79,18 @@ const SignupPage = () => {
       data.delete("confirmPassword");
 
       const response = await signup(data);
-
+      if(response.ok){
       navigate('/login');
+      }
+      else if(response.email){
+          setNewErrors((prev)=> ({...prev,email : response.email}));
+      }
+      else if(response.mobile){
+          setNewErrors((prev)=> ({...prev,mobile : response.mobile}));
+      }
+      else{
+        setNewErrors((prev)=> ({...prev,message : response.message}));
+      }
 
     } catch (err) {
       console.error(err);

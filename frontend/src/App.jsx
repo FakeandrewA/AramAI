@@ -36,8 +36,8 @@ function App() {
 
             <Route path="/onboarding" element={<OnBoardingPage />} />
 
-            <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/chat" />} />
-            <Route path="/signup" element={!authUser ? <SignupPage /> : <Navigate to="/chat" />} />
+            <Route path="/login" element={<LoginPage />}/>
+            <Route path="/signup" element={<SignupPage />}/>
 
             <Route
               path="/chat"
