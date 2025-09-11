@@ -6,6 +6,7 @@ from langgraph.prebuilt import ToolNode
 from langchain_tavily import TavilySearch
 from langchain_core.messages import ToolMessage
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 
 system_prompt = """
     You are a legal assistant specialized in Indian law. 
