@@ -47,81 +47,82 @@ def serialise_ai_message_chunk(chunk):
             f"Object of type {type(chunk).__name__} is not correctly formatted for serialisation"
         )
 
+import json
+from typing import Optional
+from uuid import uuid4
+from langchain_core.messages import HumanMessage
+
 async def generate_chat_responses(message: str, checkpoint_id: Optional[str] = None):
     is_new_conversation = checkpoint_id is None
-    
-    if is_new_conversation:
-        # Generate new checkpoint ID for first message in conversation
-        new_checkpoint_id = str(uuid4())
 
-        config = {
-            "configurable": {
-                "thread_id": new_checkpoint_id
-            }
-        }
-        
-        # Initialize with first message
+    if is_new_conversation:
+        new_checkpoint_id = str(uuid4())
+        config = {"configurable": {"thread_id": new_checkpoint_id}}
+
         events = graph.astream_events(
             {"messages": [HumanMessage(content=message)]},
             version="v2",
-            config=config
+            config=config,
         )
-        
-        # First send the checkpoint ID
-        yield f"data: {{\"type\": \"checkpoint\", \"checkpoint_id\": \"{new_checkpoint_id}\"}}\n\n"
+
+        # send checkpoint to frontend
+        yield f"data: {json.dumps({'type': 'checkpoint', 'checkpoint_id': new_checkpoint_id})}\n\n"
     else:
-        config = {
-            "configurable": {
-                "thread_id": checkpoint_id
-            }
-        }
-        # Continue existing conversation
+        config = {"configurable": {"thread_id": checkpoint_id}}
         events = graph.astream_events(
             {"messages": [HumanMessage(content=message)]},
             version="v2",
-            config=config
+            config=config,
         )
 
     async for event in events:
         event_type = event["event"]
         
-        if event_type == "on_chat_model_stream":
+        # 🔹 LLM started reasoning
+        if event_type == "on_chat_model_start":
+            yield f"data: {json.dumps({'type': 'thinking'})}\n\n"
+
+        # 🔹 Stream tokens as they arrive
+        elif event_type == "on_chat_model_stream":
             chunk_content = serialise_ai_message_chunk(event["data"]["chunk"])
-            # Escape single quotes and newlines for safe JSON parsing
-            safe_content = chunk_content.replace("'", "\\'").replace("\n", "\\n")
-            
-            yield f"data: {{\"type\": \"content\", \"content\": \"{safe_content}\"}}\n\n"
-            
-        elif event_type == "on_chat_model_end":
-            # Check if there are tool calls for search
-            tool_calls = event["data"]["output"].tool_calls if hasattr(event["data"]["output"], "tool_calls") else []
-            search_calls = [call for call in tool_calls if call["name"] == "tavily_search_results_json"]
-            
-            if search_calls:
-                # Signal that a search is starting
-                search_query = search_calls[0]["args"].get("query", "")
-                # Escape quotes and special characters
-                safe_query = search_query.replace('"', '\\"').replace("'", "\\'").replace("\n", "\\n")
-                yield f"data: {{\"type\": \"search_start\", \"query\": \"{safe_query}\"}}\n\n"
-                
-        elif event_type == "on_tool_end" and event["name"] == "tavily_search_results_json":
-            # Search completed - send results or error
-            output = event["data"]["output"]
-            
-            # Check if output is a list 
-            if isinstance(output, list):
-                # Extract URLs from list of search results
-                urls = []
-                for item in output:
-                    if isinstance(item, dict) and "url" in item:
-                        urls.append(item["url"])
-                
-                # Convert URLs to JSON and yield them
-                urls_json = json.dumps(urls)
-                yield f"data: {{\"type\": \"search_results\", \"urls\": {urls_json}}}\n\n"
-    
-    # Send an end event
-    yield f"data: {{\"type\": \"end\"}}\n\n"
+            if chunk_content:  # skip empty tokens
+                yield f"data: {json.dumps({'type': 'content', 'content': chunk_content})}\n\n"
+
+        # 🔹 Tool starts (like search query)
+        elif event_type == "on_tool_start": 
+            if event.get("name") == "rag_tool":
+                # Send "search_start" immediately with the query
+                search_query = event["data"].get("input", {}).get("query", "")
+                yield f"data: {json.dumps({'type': 'rag_start', 'query': search_query})}\n\n"
+            elif event.get("name") == "tavily_search":
+                search_query = event["data"].get("input", {}).get("query", "")
+                yield f"data: {json.dumps({'type': 'search_start', 'query': search_query})}\n\n"
+            elif event.get("name") == "indian_kannon_search_tool":
+                search_query = event["data"].get("input", {}).get("query", "")
+                yield f"data: {json.dumps({'type': 'i_search_start', 'query': search_query})}\n\n"        
+
+        # 🔹 Tool ends (returning results)
+        elif event_type == "on_tool_end":
+            if event.get("name") == "rag_tool":
+                output = event["data"]["output"].content[100:200]+"......"
+                yield f"data: {json.dumps({'type': 'rag_results', 'context': output})}\n\n"
+            elif event.get("name") == "tavily_search":
+                output = event["data"]["output"]
+                if hasattr(output, "content"):
+                    parsed = json.loads(output.content)
+                    results = parsed.get("results", [])
+                    urls = [r["url"] for r in results if "url" in r]
+                    yield f"data: {json.dumps({'type': 'search_results', 'urls': urls})}\n\n"
+            elif event.get("name") == "indian_kannon_search_tool":
+                output = event["data"]["output"]
+                results = json.loads(output.content)
+                url = results[0].get("link", "")
+                yield f"data: {json.dumps({'type': 'i_search_results', 'url': url})}\n\n"
+
+    # 🔹 End of stream
+    yield f"data: {json.dumps({'type': 'end'})}\n\n"
+
+
 
 
 @app.get("/chat_stream/{message}")
