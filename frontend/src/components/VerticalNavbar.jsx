@@ -4,31 +4,21 @@ import { useAuthStore } from "../store/useAuthStore";
 import { MessageSquare, Settings, GraduationCap, Menu, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ModeToggle } from "./mode-toggle";
-import { Sun, Moon } from "lucide-react";
 import { useTheme } from "../contexts/theme-provider";
+import ChatList from "./chat/ChatList";
 
 const VerticalNavbar = () => {
-  const [collapsed, setCollapsed ] = useState(true);
+  const [collapsed, setCollapsed] = useState(true);
   const { theme, setTheme } = useTheme();
   const [darkMode, setDarkMode] = useState(false);
-  const { authUser , setShowMyProfile} = useAuthStore();
+  const { authUser, setShowMyProfile, createChat } = useAuthStore();
+  const [activePage, setActivePage] = useState("/chat");
 
   useEffect(() => {
     setDarkMode(theme === "dark");
   }, [theme]);
 
-  // ✅ Collapse on mobile
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setCollapsed(true);
-      }
-    };
-    handleResize(); // run once on mount
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-   const toggleTheme = () => {
+  const toggleTheme = () => {
     const newTheme = darkMode ? "light" : "dark";
     setTheme(newTheme);
     setDarkMode(!darkMode);
@@ -43,41 +33,22 @@ const VerticalNavbar = () => {
   return (
     <motion.div
       animate={{ width: collapsed ? 80 : 260 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="h-screen fixed top-0 left-0 z-50 flex flex-col justify-between overflow-x-hidden overflow-y-auto
-                 dark:bg-sidebar/30 bg-sidebar/20 backdrop-blur shadow-lg py-6 px-3 rounded-r-2xl "
+      transition={{ duration: 0.1, ease: "easeInOut" }}
+      className="h-full top-0 left-0 z-50 flex flex-col justify-between
+                 dark:bg-sidebar/30 bg-sidebar/60 backdrop-blur shadow-lg  px-3 
+                 rounded-r-2xl fixed md:relative"
     >
       {/* Top Section */}
-      <div className="flex flex-col gap-10">
-        {/* Logo */}
-        <div
-          className={`flex flex-row-reverse justify-between items-center  ${
-            collapsed ? "px-3" : "px-2"
-          }`}
-        >
-            <div>
-              <AnimatePresence>
-                {!collapsed && (
-                  <motion.h1
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.22 }}
-                    className="font-goldman text-2xl font-semibold"
-                  >
-                    <div className="flex">
-                      <div className="size-6 rounded-full bg-foreground"></div>
-                      <div className="size-6 rounded-full bg-emerald-500 -ml-3"></div>
-                    </div>
-                  </motion.h1>
-                )}
-              </AnimatePresence>
+      <div className="flex flex-col gap-10 py-6">
+        {/* Logo + Collapse toggle */}
+        <div className={`flex flex-row-reverse justify-between items-center ${collapsed ? "px-3" : "px-2"}`}>
+          <div>
+            
           </div>
 
-          {/* Hide toggle button on mobile */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-lg hover:bg-[#494949]/5 dark:hover:bg-[#494949]/10 transition hidden md:block"
+            className="p-1 rounded-lg hover:bg-[#494949]/5 dark:hover:bg-[#494949]/10 transition "
           >
             <Menu size={22} />
           </button>
@@ -89,6 +60,9 @@ const VerticalNavbar = () => {
             <NavLink
               key={name}
               to={path}
+              onClick={() => {
+                setActivePage(path);
+              }}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-2 py-2 rounded-xl relative group
                  transition-all duration-200 text-foreground
@@ -100,8 +74,6 @@ const VerticalNavbar = () => {
               }
             >
               {icon}
-
-              {/* Expand name */}
               <AnimatePresence>
                 {!collapsed && (
                   <motion.span
@@ -115,47 +87,69 @@ const VerticalNavbar = () => {
                   </motion.span>
                 )}
               </AnimatePresence>
-
-              
             </NavLink>
           ))}
         </nav>
       </div>
 
+      {/* Middle Section (fills space) */}
+      <div className="flex-1 overflow-y-auto mt-4 mb-4">
+        <AnimatePresence mode="wait">
+          {!collapsed && (
+            <motion.div
+              key="chatlist"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.06  }}
+              className="w-full flex-1"
+            >
+              {activePage === "/chat" &&
+              
+                <ChatList
+                  chats={authUser?.chats || []}
+                  onNewChat={createChat}
+                  userId={authUser?._id}
+                />
+              }
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Bottom Section */}
-      <div className="flex flex-col gap-4  sapce-y-10 mt-20">
-        
+      <div className="flex flex-col gap-4 py-4">
         <div className="px-2">
-          <ModeToggle/>
-          
+          <ModeToggle />
         </div>
-        {/* Profile Section */}
-        <button onClick={()=>{setShowMyProfile()}} className="flex items-center gap-3 py-2 px-1 rounded-xl hover:bg-[#494949]/5 dark:hover:bg-[#494949]/10 transition cursor-pointer relative group">
+
+        <button
+          onClick={() => {
+            setShowMyProfile();
+          }}
+          className="flex items-center gap-3 py-2 px-1 rounded-xl hover:bg-[#494949]/5 dark:hover:bg-[#494949]/10 transition cursor-pointer"
+        >
           <img
             src={authUser?.profilePic || "./images/user.jpg"}
             className="w-12 h-12 rounded-full border-2 border-[#10B981]"
             alt="User"
           />
-
-          {/* Expanded view */}
           <AnimatePresence>
             {!collapsed && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.1 }}
                 className="flex flex-col items-start"
               >
                 <p className="font-semibold opacity-80">
-                  {authUser?.firstName  || "User"}
+                  {authUser?.firstName || "User"}
                 </p>
                 <p className="text-sm">View Profile</p>
               </motion.div>
             )}
           </AnimatePresence>
-
-          
         </button>
       </div>
     </motion.div>

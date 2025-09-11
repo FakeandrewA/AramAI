@@ -116,7 +116,7 @@ const MessageArea = ({ messages }) => {
   console.log(messages);
   return (
     <div
-      className="flex-grow overflow-y-auto bg-background border-b border-border"
+      className=" bg-background h-full w-full "
       style={{ minHeight: 0 }}
     >
       <div className=" mx-auto p-6">
@@ -127,7 +127,7 @@ const MessageArea = ({ messages }) => {
               message.role==="user" ? "justify-end" : "justify-start"
             } mb-5`}
           >
-            <div className="flex flex-col max-w-[75%]">
+            <div className="flex flex-col max-w-[90%] md:max-w-[80%] ">
               {message.role!=="user" && message.searchInfo && (
                 <SearchStages searchInfo={message.searchInfo} />
               )}
@@ -135,8 +135,8 @@ const MessageArea = ({ messages }) => {
               <div
                 className={`rounded-lg py-3 px-5 ${
                   message.role==="user"
-                    ? "bg-[linear-gradient(var(--chat-gradient))] text-[var(--clr-text-inverse)] rounded-br-none shadow-md"
-                    : "bg-card text-foreground border border-border rounded-bl-none shadow-sm"
+                    ? "bg-sidebar/60  rounded-br-none shadow-md border border-border"
+                    : " text-foreground rounded-bl-none shadow-md border border-border"
                 }`}
               >
                 {message.isLoading ? (
