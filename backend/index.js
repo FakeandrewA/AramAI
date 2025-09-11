@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_DEV_URI || 'mongodb://localhost:27017/AramAI';
+const MONGO_URI = process.env.MONGO_URI;
 
 // Fix __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -31,16 +31,21 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/users', userRoutes);
 app.use('/api/chats', chatRoutes);
 
+// Root route
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
 // Connect to MongoDB and start server
 mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('MongoDB connected');
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    })
-    .catch(err => console.log(err));
+.then(() => {
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+})
+.catch(err => console.error('❌ MongoDB connection error:', err));
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', err => {
+    console.error('Unhandled Rejection:', err);
+    process.exit(1);
+});

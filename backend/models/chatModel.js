@@ -11,9 +11,14 @@ const chatSchema = new mongoose.Schema({
         stages: [String],
         query: String,
         urls: [String],
+        internalQuery: String,
+        internalUrls: [String],
+        ragQuery: String,
+        ragContext: String,
+        error: String
       },
       content: { type: String, required: true },
-      messageid: { Number }
+      messageid: { type: Number }
     }
   ]
 }, { timestamps: true });
