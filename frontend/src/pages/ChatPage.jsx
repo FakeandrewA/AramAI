@@ -39,7 +39,7 @@ const ChatPage = () => {
         e.preventDefault();
         setReceiving(true);
         if (currentMessage.trim()) {
-            const newMessageId = messages.length + 1;
+            const newMessageId = Date.now();
 
             setMessages((prev) => [
                 ...prev,
@@ -56,7 +56,7 @@ const ChatPage = () => {
             setCurrentMessage("");
 
             try {
-                const aiResponseId = newMessageId + 1;
+                const aiResponseId = Date.now() + 1;
                 setMessages((prev) => [
                     ...prev,
                     {
@@ -86,117 +86,77 @@ const ChatPage = () => {
 
                 const eventSource = new EventSource(url);
                 let streamedContent = "";
-                let searchData = null;
+                let searchData = { stages: [], query: "", urls: [], internalQuery: "", internalUrls: [], ragSources: [], error: null };
                 let hasReceivedContent = false;
 
                 eventSource.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
+                        // Use a new object to ensure state updates correctly
+                        let newSearchInfo = { ...searchData, stages: [...searchData.stages] };
 
-                        if (data.type === "checkpoint") {
-                            setCheckpointId(data.checkpoint_id);
-                            console.log(data.checkpoint_id);
-                        } else if (data.type === "content") {
-                            streamedContent += data.content;
-                            hasReceivedContent = true;
-
-                            setMessages((prev) =>
-                                prev.map((msg) =>
-                                    msg.id === aiResponseId
-                                        ? { ...msg, content: streamedContent, isLoading: false }
-                                        : msg
-                                )
-                            );
-                        } else if (data.type === "search_start") {
-                            const newSearchInfo = {
-                                stages: ["searching"],
-                                query: data.query,
-                                urls: [],
-                            };
-                            searchData = newSearchInfo;
-
-                            setMessages((prev) =>
-                                prev.map((msg) =>
-                                    msg.id === aiResponseId
-                                        ? {
-                                            ...msg,
-                                            content: streamedContent,
-                                            searchInfo: newSearchInfo,
-                                            isLoading: false,
-                                        }
-                                        : msg
-                                )
-                            );
-                        } else if (data.type === "search_results") {
-                            try {
-                                const urls =
-                                    typeof data.urls === "string" ? JSON.parse(data.urls) : data.urls;
-
-                                const newSearchInfo = {
-                                    stages: searchData
-                                        ? [...searchData.stages, "reading"]
-                                        : ["reading"],
-                                    query: searchData?.query || "",
-                                    urls: urls,
-                                };
-                                searchData = newSearchInfo;
-
-                                setMessages((prev) =>
-                                    prev.map((msg) =>
-                                        msg.id === aiResponseId
-                                            ? {
-                                                ...msg,
-                                                content: streamedContent,
-                                                searchInfo: newSearchInfo,
-                                                isLoading: false,
-                                            }
-                                            : msg
-                                    )
-                                );
-                            } catch (err) {
-                                console.error("Error parsing search results:", err);
-                            }
-                        } else if (data.type === "search_error") {
-                            const newSearchInfo = {
-                                stages: searchData ? [...searchData.stages, "error"] : ["error"],
-                                query: searchData?.query || "",
-                                error: data.error,
-                                urls: [],
-                            };
-                            searchData = newSearchInfo;
-
-                            setMessages((prev) =>
-                                prev.map((msg) =>
-                                    msg.id === aiResponseId
-                                        ? {
-                                            ...msg,
-                                            content: streamedContent,
-                                            searchInfo: newSearchInfo,
-                                            isLoading: false,
-                                        }
-                                        : msg
-                                )
-                            );
-                            setReceiving(false);
-                        } else if (data.type === "end") {
-                            if (searchData) {
-                                const finalSearchInfo = {
-                                    ...searchData,
-                                    stages: [...searchData.stages, "writing"],
-                                };
-
-                                setMessages((prev) =>
-                                    prev.map((msg) =>
-                                        msg.id === aiResponseId
-                                            ? { ...msg, searchInfo: finalSearchInfo, isLoading: false }
-                                            : msg
-                                    )
-                                );
-                            }
-
-                            eventSource.close();
-                            setReceiving(false);
+                        switch (data.type) {
+                            case "checkpoint":
+                                setCheckpointId(data.checkpoint_id);
+                                newSearchInfo.stages.push("checkpoint");
+                                break;
+                            case "thinking":
+                                newSearchInfo.stages.push("thinking");
+                                break;
+                            case "search_start":
+                                newSearchInfo.stages.push("searching");
+                                newSearchInfo.query = data.query;
+                                break;
+                            case "search_results":
+                                newSearchInfo.stages.push("reading");
+                                newSearchInfo.urls = Array.isArray(data.urls) ? data.urls : [];
+                                break;
+                            case "i_search_start":
+                                newSearchInfo.stages.push("internal_searching");
+                                newSearchInfo.internalQuery = data.query;
+                                break;
+                            case "i_search_results":
+                                newSearchInfo.stages.push("internal_reading");
+                                const i_urls = Array.isArray(data.urls) ? data.urls : (data.url ? [data.url] : []);
+                                newSearchInfo.internalUrls = i_urls;
+                                break;
+                            case "rag_start":
+                                newSearchInfo.stages.push("rag_searching");
+                                newSearchInfo.ragQuery = data.query;
+                                break;
+                            case "rag_results":
+                                newSearchInfo.stages.push("rag_reading");
+                                newSearchInfo.ragContext = data.context;
+                                break;
+                            case "content":
+                                streamedContent += data.content;
+                                hasReceivedContent = true;
+                                break;
+                            case "search_error":
+                                newSearchInfo.stages.push("error");
+                                newSearchInfo.error = data.message;
+                                setReceiving(false);
+                                eventSource.close();
+                                break;
+                            case "end":
+                                newSearchInfo.stages.push("writing");
+                                setReceiving(false);
+                                eventSource.close();
+                                break;
                         }
+
+                        // Remove duplicates to keep the list clean while preserving order
+                        newSearchInfo.stages = Array.from(new Set(newSearchInfo.stages));
+                        searchData = newSearchInfo;
+
+                        setMessages((prev) =>
+                            prev.map((msg) =>
+                                msg.id === aiResponseId
+                                    ? { ...msg, content: streamedContent, searchInfo: searchData, isLoading: false }
+                                    : msg
+                            )
+                        );
+
                     } catch (error) {
                         console.error("Error parsing event data:", error, event.data);
                     }

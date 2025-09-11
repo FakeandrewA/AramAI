@@ -68,7 +68,7 @@ const MyProfile = () => {
           <div className="flex flex-col items-center gap-3 mb-10">
             <div className="relative w-32 h-32 rounded-full border-4 border-foreground/70 flex items-center justify-center bg-transparent">
               <img
-                src={selectedImage ? URL.createObjectURL(selectedImage) : authUser?.profilePic || "./images/user.jpeg"}
+                src={selectedImage ? URL.createObjectURL(selectedImage) : authUser?.profilePic || "/images/user.jpg"}
                 alt="avatar"
                 className="w-28 h-28 rounded-full object-cover border border-gray-300 dark:border-gray-600"
               />

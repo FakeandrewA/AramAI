@@ -178,7 +178,7 @@ export const useAuthStore = create((set) => ({
       if (updates.profilePic) formData.append("profilePic", updates.profilePic);
 
       const response = await fetch("http://localhost:5000/api/users/updateProfile", {
-        method: "PATCH", // PUT is correct for updates
+        method: "PATCH",
         headers: {
           "Authorization": `Bearer ${token}`,
         },

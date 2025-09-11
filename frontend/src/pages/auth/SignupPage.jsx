@@ -135,7 +135,7 @@ const SignupPage = () => {
               required
               className="w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
             />
-            {newErrors.lastName && <ErrorMessage message={"newErrors.lastName"} />}
+            {newErrors.lastName && <ErrorMessage message={newErrors.lastName} />}
           </div>
 
 

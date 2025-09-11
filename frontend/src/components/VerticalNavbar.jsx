@@ -42,9 +42,13 @@ const VerticalNavbar = () => {
       <div className="flex flex-col gap-10 py-6">
         {/* Logo + Collapse toggle */}
         <div className={`flex flex-row-reverse justify-between items-center ${collapsed ? "px-3" : "px-2"}`}>
-          <div>
-            
-          </div>
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.1 }} className="font-goldman text-xl font-medium">
+                Aram AI
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <button
             onClick={() => setCollapsed(!collapsed)}
