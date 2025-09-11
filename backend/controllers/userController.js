@@ -37,7 +37,7 @@ export const registerUser = async (req, res) => {
         res.status(201).json({ message: 'User registered successfully' });
         console.log("New user created:", newUser);
     } catch (error) {
-        res.status(500).json({ message: `Server error: ${error.message}` });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
@@ -60,20 +60,8 @@ export const loginUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
         );
-        let safeUser = await User.findById(user._id).select('-password')
-            .populate({
-                path: "chats",
-                options: { sort: { createdAt: -1 } }, // sorted
-            });
-        const obj = safeUser.toObject();
-        const chats = obj.chats.map(chat => ({
-            _id: chat._id,
-            name: chat.name,
-            createdAt: chat.createdAt,
-        }));
-
-
-        res.status(200).json({ token, user: {...obj, chats: chats} });
+        const safeUser = await User.findById(user._id).select("-password");
+        res.status(200).json({ token , user:safeUser });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -91,13 +79,8 @@ export const getUserProfile = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        const obj = user.toObject();
-        const chats = (obj.chats || []).map((chat) => ({
-            _id: chat._id,
-            name: chat.name,
-            createdAt: chat.createdAt,
-        }));
-        res.status(200).json({...obj,chats: chats});
+
+        res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
