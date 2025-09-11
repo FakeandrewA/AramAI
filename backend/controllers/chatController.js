@@ -181,28 +181,41 @@ export const getChatMessages = async (req, res) => {
 /**
  * Get user chat list sorted by newest
  */
+
 export const getUserChats = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await User.findById(userId).populate({
-      path: "chats",
-      options: { sort: { createdAt: -1 } }, // sorted
-    });
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+
+    const user = await User.findById(userId)
+      .populate({
+        path: "chats",
+        options: { sort: { createdAt: -1 } }, // sort by most recent
+      })
+      .lean();
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
+    const chats = (user.chats || []).map((chat) => ({
+      chatId: chat._id,
+      name: chat.name,
+      createdAt: chat.createdAt,
+    }));
+
     res.status(200).json({
-      chats: user.chats.map((chat) => ({
-        chatId: chat._id,
-        name: chat.name,
-        createdAt: chat.createdAt,
-      })),
+      userId: user._id,
+      chatCount: chats.length,
+      chats,
     });
   } catch (error) {
     console.error("Error fetching user chats:", error);
     res.status(500).json({ error: "Failed to fetch chats" });
   }
 };
+

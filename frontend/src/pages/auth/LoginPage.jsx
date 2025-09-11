@@ -26,8 +26,7 @@ const LoginPage = () => {
     try {
       
       const response = await login(formData);
-      console.log(response)
-      if(response.ok) navigate("/chat");
+      if(response.ok) navigate("/chat", {replace: true});
       else{
         setErrors({general: "Login failed. Please check your credentials." })
       }
