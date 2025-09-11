@@ -34,7 +34,7 @@ const MyProfile = () => {
   };
 
   return (
-    <div className="w-[100vw] fixed inset-0 min-h-[100vh] bg-black/40 flex px-6 py-10 items-center justify-center backdrop-blur-xs">
+    <div className="w-[100vw] fixed inset-0 min-h-[100vh] bg-black/40 flex px-6 py-10 items-center justify-center backdrop-blur-xs z-100">
       <div className="md:w-150 w-full min-h-[80vh] max-h-[80vh] bg-background rounded-3xl px-5 py-5 relative overflow-y-auto md:px-10">
         {/* Close Button */}
         <div className="w-full flex justify-end">
@@ -59,7 +59,7 @@ const MyProfile = () => {
           <div className="flex flex-col items-center gap-3 mb-10">
             <div className="relative w-32 h-32 rounded-full border-4 border-foreground/70 flex items-center justify-center bg-transparent">
               <img
-                src={authUser?.profilePic || "./images/user.jpg"}
+                src={authUser?.profilePic || "./images/user.jpeg"}
                 alt="avatar"
                 className="w-28 h-28 rounded-full object-cover border border-gray-300 dark:border-gray-600"
               />

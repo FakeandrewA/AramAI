@@ -246,34 +246,28 @@ const ChatPage = () => {
 
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
-            {/* Top Header */}
-            <Header />
+  <div className="flex flex-col h-screen w-full bg-background">
+    {/* Top Header */}
+    <Header />
 
-            {/* Main content area (below header) */}
-            <div className="flex flex-1">
-                {/* Left side: messages + input */}
-                <div className="flex-1 flex flex-col bg-[var(--gradient-primary)] shadow-lg border-r border-border">
-                    <MessageArea messages={messages}/>
-                    <InputBar
-                        currentMessage={currentMessage}
-                        setCurrentMessage={setCurrentMessage}
-                        onSubmit={handleSubmit}
-                        disabled = {receiving}
-                    />
-                </div>
+    {/* Scrollable messages (fills remaining space) */}
+    <div className="flex-1 overflow-y-auto px-4 md:px-16 lg:px-32 xl:px-54 2xl:px-100 mb-20">
+      <MessageArea messages={messages} />
+    </div>
 
-                {/* Right side: chat list */}
-                <div className="w-72 border-l border-border">
-                    <ChatList
-                        chats={authUser.chats}
-                        onNewChat={createChat}
-                        userId={authUser._id}
-                    />
-                </div>
-            </div>
-        </div>
-    );
+    {/* Input bar fixed at bottom */}
+    <div className="relative w-full  z-50">
+      <InputBar
+        currentMessage={currentMessage}
+        setCurrentMessage={setCurrentMessage}
+        onSubmit={handleSubmit}
+        disabled={receiving}
+      />
+    </div>
+  </div>
+);
+
+
 };
 
 export default ChatPage;

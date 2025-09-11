@@ -12,11 +12,11 @@ const Layout = ({ children }) => {
   const showNavbar = !noNavbarPages.includes(path) && authUser;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-[100vh] w-[100vw]">
       {showNavbar && <VerticalNavbar />}
       {showMyProfile && <MyProfile />}
       
-      <div className={`${showNavbar ? "ml-20" : ""} flex-1`}>
+      <div className={`${showNavbar ? "pl-20 md:pl-0 " : ""}  flex-1`}>
         {children}
       </div>
     </div>
