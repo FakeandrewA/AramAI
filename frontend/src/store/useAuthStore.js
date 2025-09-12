@@ -200,7 +200,9 @@ export const useAuthStore = create((set) => ({
       console.error("Error updating profile:", error);
       throw error;
     }
-  }
+  },
+  currentChatId:null,
+  setCurrentChatId: (chatId) =>set({currentChatId:chatId}),
 
 
 }));
