@@ -8,16 +8,32 @@ const LawerList = () => {
   const [search, setSearch] = useState("");
   const [showLess, setShowLess] = useState(true);
   const [lawyers, setLawyers] = useState([]);
-  const { findLawyers } = useAuthStore();
+  const { findLawyers, authUser } = useAuthStore();
 
   // fetch lawyers on mount and when search changes
   useEffect(() => {
     const fetchData = async () => {
-      const result = await findLawyers(search);
-      setLawyers(result);
+      const data = {
+        field: [],
+        q: search,
+        maxDistance: 25000
+      };
+
+      if (authUser?.location?.coordinates) {
+        data.longitude = authUser.location.coordinates[0]; // [lng, lat]
+        data.latitude = authUser.location.coordinates[1];
+      }
+
+      try {
+        const result = await findLawyers(data);
+        setLawyers(result);
+      } catch (err) {
+        console.error("Error fetching lawyers:", err);
+      }
     };
     fetchData();
-  }, [search, findLawyers]);
+  }, [search, findLawyers, authUser]);
+
 
   return (
     <div className="w-full mt-20 space-y-10">
@@ -46,9 +62,8 @@ const LawerList = () => {
         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-8 relative"
       >
         <button
-          className={`absolute -bottom-12 right-0 px-3 py-1 bg-foreground/10 rounded ${
-            showLess ? "" : "rotate-180"
-          }`}
+          className={`absolute -bottom-12 right-0 px-3 py-1 bg-foreground/10 rounded ${showLess ? "" : "rotate-180"
+            }`}
           onClick={() => {
             setShowLess(!showLess);
           }}

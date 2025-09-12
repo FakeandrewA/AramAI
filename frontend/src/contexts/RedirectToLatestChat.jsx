@@ -15,8 +15,8 @@ const RedirectToLatestChat = () => {
         } else {
           try {
             const chat = await createChat(authUser._id);
-            if (chat && chat.chatId) {
-              latestChatId = chat.chatId;
+            if (chat && chat._id) {
+              latestChatId = chat._id;
             } else {
               navigate("/onboarding", { replace: true });
               return;

@@ -204,19 +204,19 @@ export const useAuthStore = create((set) => ({
   currentChatId: null,
   setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
 
-  findLawyers: async (filters = {}) => {
+  findLawyers: async (data) => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
       // Build query string
-      const queryParams = new URLSearchParams(filters).toString();
-      const response = await fetch(`http://localhost:5000/api/users/lawyer/search?${queryParams}`, {
-        method: "GET",
+      const response = await fetch(`http://localhost:5000/api/users/lawyer/search`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
+        body: JSON.stringify(data)
       });
 
       if (!response.ok) {
