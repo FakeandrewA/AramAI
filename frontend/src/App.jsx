@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { Loader } from "lucide-react";
 import Layout from "./contexts/LayoutContext";
 import RedirectToLatestChat from "./contexts/RedirectToLatestChat";
+import LawyerPage from "./pages/LawyerPage";
 
 function App() {
   const { isCheckingAuth, authUser, checkAuth } = useAuthStore();
@@ -53,6 +54,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ChatPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lawyer/"
+              element={
+                <ProtectedRoute>
+                  <LawyerPage />
                 </ProtectedRoute>
               }
             />
