@@ -1,6 +1,6 @@
 import React from 'react'
 
-const LawyerPage = () => {
+const LawerList = () => {
   return (
     <div>
         
@@ -8,4 +8,4 @@ const LawyerPage = () => {
   )
 }
 
-export default LawyerPage
+export default LawerList

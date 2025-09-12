@@ -8,12 +8,17 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 const ChatPage = () => {
 
-    const { authUser, getMessages } = useAuthStore();
+    const { authUser, getMessages , setCurrentChatId , currentChatId} = useAuthStore();
     const [messages, setMessages] = useState([]);
     let { chatId } = useParams();
     if (chatId == null) {
         return <Navigate to='/onBoarding' />;
     }
+    useEffect(()=>{
+        setCurrentChatId(chatId)
+        console.log("Current Chat Id" ,chatId)
+        console.log(currentChatId)
+    } , [chatId])
     useEffect(() => {
         const fetchMessages = async () => {
             try {
