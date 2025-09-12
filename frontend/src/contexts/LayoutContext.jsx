@@ -12,7 +12,7 @@ const Layout = ({ children }) => {
   const showNavbar = !noNavbarPages.includes(path) && authUser;
 
   return (
-    <div className="flex h-[100vh] w-[100vw]">
+    <div className="flex min-h-[100vh] w-[100vw]">
       {showNavbar && <VerticalNavbar />}
       {showMyProfile && <MyProfile />}
       

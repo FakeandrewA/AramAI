@@ -46,7 +46,7 @@ const MyProfile = () => {
   };
 
   return (
-    <div className="w-[100vw] fixed inset-0 min-h-[100vh] bg-black/40 flex px-6 py-10 items-center justify-center backdrop-blur-xs z-100">
+    <div className="w-[100vw] fixed inset-0 min-h-[100vh] bg-black/40 flex px-6 py-10 items-center justify-center backdrop-blur-xs z-1000">
       <div className="md:w-150 w-full min-h-[80vh] max-h-[80vh] bg-background rounded-3xl px-5 py-5 relative overflow-y-auto md:px-10">
         {/* Close Button */}
         <div className="w-full flex justify-end">

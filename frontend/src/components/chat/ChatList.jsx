@@ -1,11 +1,12 @@
 import { FilePenLine } from "lucide-react";
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useParams } from "react-router-dom";
 
 const ChatList = ({ chats, onNewChat, userId }) => {
 
   const navigate = useNavigate();
-  const [activeChatId, setActiveChatId] = useState(null);
+  console.log(chats)
+  const [activeChatId, setActiveChatId] = useState(chats[0]._id);
   const handleNewChat = async () => {
     // wait for backend to return new chat
     const chat = await onNewChat(userId);  
@@ -15,7 +16,7 @@ const ChatList = ({ chats, onNewChat, userId }) => {
   };
 
   return (
-    <div className="w-full h-fit px-3 flex flex-col">
+    <div className="w-full h-fit px-3 flex flex-col ">
       {/* New Chat Button */}
       <div className="font-medium tracking-wider  text-xs opacity-60 mb-4">
         ARAM AI

@@ -211,12 +211,12 @@ const ChatPage = () => {
     <Header />
 
     {/* Scrollable messages (fills remaining space) */}
-    <div className="flex-1 overflow-y-auto px-4 md:px-16 lg:px-32 xl:px-54 2xl:px-100 mb-20">
+    <div className="flex-1 overflow-y-auto px-4 flex  justify-center w-full ">
       <MessageArea messages={messages} />
     </div>
 
     {/* Input bar fixed at bottom */}
-    <div className="relative w-full  z-50">
+    <div className="flex items-center bg-transparent justify-center w-full  z-50">
       <InputBar
         currentMessage={currentMessage}
         setCurrentMessage={setCurrentMessage}

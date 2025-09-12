@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_DEV_URI;
 
 // Fix __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);

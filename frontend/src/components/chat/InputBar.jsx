@@ -19,9 +19,9 @@ const InputBar = ({ currentMessage, setCurrentMessage, onSubmit }) => {
   return (
     <form
       onSubmit={onSubmit}
-      className="absolute bottom-0 left-0 right-0 p-4 bg-background px-4  md:px-16 lg:px-32 xl:px-54 2xl:px-100 "
+      className="p-4 z-90  w-[95%]  md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%] "
     >
-      <div className="flex items-end bg-muted/50 rounded-xl p-2 shadow-md w-full">
+      <div className="flex items-end bg-sidebar/60 rounded-xl p-2 shadow-md w-full">
         <textarea
           ref={textareaRef}
           placeholder="Type a message..."

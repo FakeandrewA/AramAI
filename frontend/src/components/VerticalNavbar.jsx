@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
-import { MessageSquare, Settings, GraduationCap, Menu, Bot } from "lucide-react";
+import { Settings, GraduationCap, Menu, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ModeToggle } from "./mode-toggle";
 import { useTheme } from "../contexts/theme-provider";
@@ -14,9 +14,23 @@ const VerticalNavbar = () => {
   const { authUser, setShowMyProfile, createChat } = useAuthStore();
   const [activePage, setActivePage] = useState("/chat");
 
+  // 🔹 Track zoom state
+  const [isZoomed, setIsZoomed] = useState(false);
+
   useEffect(() => {
     setDarkMode(theme === "dark");
   }, [theme]);
+
+  useEffect(() => {
+    const checkZoom = () => {
+      const zoom = Math.round(window.devicePixelRatio * 100);
+      setIsZoomed(zoom > 200); // enable scroll when zoom > 200%
+    };
+
+    checkZoom();
+    window.addEventListener("resize", checkZoom);
+    return () => window.removeEventListener("resize", checkZoom);
+  }, []);
 
   const toggleTheme = () => {
     const newTheme = darkMode ? "light" : "dark";
@@ -34,21 +48,20 @@ const VerticalNavbar = () => {
     <motion.div
       animate={{ width: collapsed ? 80 : 260 }}
       transition={{ duration: 0.1, ease: "easeInOut" }}
-      className="h-full top-0 left-0 z-50 flex flex-col justify-between
-                 dark:bg-sidebar/30 bg-sidebar/60 backdrop-blur shadow-lg  px-3 
-                 rounded-r-2xl fixed md:relative"
+      className={`h-screen overflow-y-auto top-0 left-0 z-80 flex flex-col justify-between
+                  dark:bg-sidebar/30 bg-sidebar/60 backdrop-blur shadow-lg px-3 
+                  rounded-r-2xl fixed md:relative
+                  ${isZoomed ? "overflow-y-auto" : ""}`}  // 🔹 scrolling applied when zoomed
     >
       {/* Top Section */}
       <div className="flex flex-col gap-10 py-6">
         {/* Logo + Collapse toggle */}
-        <div className={`flex flex-row-reverse justify-between items-center ${collapsed ? "px-3" : "px-2"}`}>
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.1 }} className="font-goldman text-xl font-medium">
-                Aram AI
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div
+          className={`flex flex-row-reverse justify-between items-center ${
+            collapsed ? "px-3" : "px-2"
+          }`}
+        >
+          <div></div>
 
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -97,7 +110,7 @@ const VerticalNavbar = () => {
       </div>
 
       {/* Middle Section (fills space) */}
-      <div className="flex-1 overflow-y-auto mt-4 mb-4">
+      <div className="flex-1 overflow-y-auto mt-4 mb-4 min-h-40">
         <AnimatePresence mode="wait">
           {!collapsed && (
             <motion.div
@@ -105,17 +118,16 @@ const VerticalNavbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.06  }}
+              transition={{ duration: 0.06 }}
               className="w-full flex-1"
             >
-              {activePage === "/chat" &&
-              
+              {activePage === "/chat" && (
                 <ChatList
                   chats={authUser?.chats || []}
                   onNewChat={createChat}
                   userId={authUser?._id}
                 />
-              }
+              )}
             </motion.div>
           )}
         </AnimatePresence>

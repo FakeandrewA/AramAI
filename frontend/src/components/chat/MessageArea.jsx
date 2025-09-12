@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 const PremiumTypingAnimation = () => {
   return (
@@ -131,10 +131,15 @@ const SearchStages = ({ searchInfo }) => {
 };
 
 const MessageArea = ({ messages }) => {
+  const endRef = useRef();
+  console.log(messages[6].content)
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages]);
   console.log(messages);
   return (
     <div
-      className=" bg-background h-full w-full "
+      className=" bg-background h-full  w-[95%]  md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%]"
       style={{ minHeight: 0 }}
     >
       <div className=" mx-auto p-6">
@@ -154,7 +159,7 @@ const MessageArea = ({ messages }) => {
                 className={`rounded-lg py-3 px-5 ${
                   message.role==="user"
                     ? "bg-sidebar/60  rounded-br-none shadow-md border border-border"
-                    : " text-foreground rounded-bl-none shadow-md border border-border"
+                    : " text-foreground rounded-bl-none shadow-md border border-border dark:shadow-white/4 leading-7 opacity-95"
                 }`}
               >
                 {message.isLoading ? (
@@ -171,6 +176,8 @@ const MessageArea = ({ messages }) => {
           </div>
         ))}
       </div>
+      
+      <div ref={endRef} />
     </div>
   );
 };
