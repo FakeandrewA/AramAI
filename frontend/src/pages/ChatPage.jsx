@@ -5,6 +5,7 @@ import MessageArea from "@/components/chat/MessageArea";
 import React, { useState, useEffect } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
+import LetterArea from "@/components/chat/LetterArea";
 
 const ChatPage = () => {
 
@@ -211,7 +212,7 @@ const ChatPage = () => {
 
 
     return (
-  <div className="flex flex-col h-screen w-full bg-background">
+        <div className="flex flex-col h-screen w-full bg-background">
     {/* Top Header */}
     <Header />
 
@@ -229,10 +230,17 @@ const ChatPage = () => {
         disabled={receiving}
       />
     </div>
-  </div>
-);
+  </div>)
 
 
 };
 
 export default ChatPage;
+
+{/* <InputBar
+          currentMessage={currentMessage}
+          setCurrentMessage={setCurrentMessage}
+          onSubmit={handleSubmit}
+          disabled={receiving}
+        />
+*/}

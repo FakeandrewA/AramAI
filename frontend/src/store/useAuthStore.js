@@ -6,7 +6,11 @@ export const useAuthStore = create((set) => ({
   isLoggingIn: false,
   isSigningUp: false,
   isCheckingAuth: true,
-  showMyProfile: false,
+  showMyProfile: false,showLetter: false,
+  toggleShowLetter: () =>
+    set((state) => ({
+      showLetter: !state.showLetter
+    })),
   setShowMyProfile: () => set(state => ({ showMyProfile: !state.showMyProfile })),
   login: async (credentials) => {
     // console.log(credentials)
@@ -25,7 +29,6 @@ export const useAuthStore = create((set) => ({
       if (result.token) {
         localStorage.setItem("authToken", result.token);
         set({ authUser: result.user });
-        console.log(result.user);
       }
       return response;
     } catch (err) {
@@ -166,57 +169,73 @@ export const useAuthStore = create((set) => ({
     }
   },
   updateProfile: async (updates) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) return;
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
 
-      // Prepare FormData for file upload
-      const formData = new FormData();
-      if (updates.firstName) formData.append("firstName", updates.firstName);
-      if (updates.lastName) formData.append("lastName", updates.lastName);
-      if (updates.age) formData.append("age", updates.age);
-      if (updates.profilePic) formData.append("profilePic", updates.profilePic);
+    // Prepare FormData for file + JSON fields
+    const formData = new FormData();
 
-      const response = await fetch("http://localhost:5000/api/users/updateProfile", {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData,
-      });
+    // Simple scalar fields
+    if (updates.firstName) formData.append("firstName", updates.firstName);
+    if (updates.lastName) formData.append("lastName", updates.lastName);
+    if (updates.age) formData.append("age", updates.age);
+    if (updates.description) formData.append("description", updates.description);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to update profile");
-      }
+    // File upload
+    if (updates.profilePic) formData.append("profilePic", updates.profilePic);
 
-      const updatedUser = await response.json();
-
-      // Update authUser in store
-      set({ authUser: updatedUser });
-
-      return updatedUser;
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      throw error;
+    // Array field → stringify
+    if (updates.field && Array.isArray(updates.field)) {
+      formData.append("field", JSON.stringify(updates.field));
     }
-  },
+
+    // Location (GeoJSON object)
+    if (updates.location && updates.location.coordinates) {
+      formData.append("location", JSON.stringify(updates.location));
+    }
+
+    const response = await fetch("http://localhost:5000/api/users/updateProfile", {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to update profile");
+    }
+
+    const updatedUser = await response.json();
+
+    // Update authUser in store
+    set({ authUser: updatedUser });
+
+    return updatedUser;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw error;
+  }
+},
+
   currentChatId: null,
   setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
 
-  findLawyers: async (filters = {}) => {
+  findLawyers: async (data) => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
       // Build query string
-      const queryParams = new URLSearchParams(filters).toString();
-      const response = await fetch(`http://localhost:5000/api/users/lawyer/search?${queryParams}`, {
-        method: "GET",
+      const response = await fetch(`http://localhost:5000/api/users/lawyer/search`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
+        body: JSON.stringify(data)
       });
 
       if (!response.ok) {
@@ -264,4 +283,3 @@ export const useAuthStore = create((set) => ({
     }
   },
 }));
-

@@ -1,7 +1,8 @@
 import { useAuthStore } from '@/store/useAuthStore';
-import { Camera, X } from 'lucide-react';
+import { Camera, LocateFixed, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getCoordinates } from '../../utils/getCoordinates';
 
 const MyProfile = () => {
   const { setShowMyProfile, authUser, logout, updateProfile } = useAuthStore();
@@ -15,10 +16,15 @@ const MyProfile = () => {
     navigate("/onboarding");
   };
 
+  // ✅ Mirror schema
   const [formdata, setFormData] = useState({
     firstName: authUser.firstName,
     lastName: authUser.lastName,
     age: authUser.age || "",
+    description: authUser.description || "",
+    field: authUser.field || [],
+    location: authUser.location || { type: "Point", coordinates: [0, 0] },
+    profilePic: authUser.profilePic || "",
   });
 
   const handleChange = (e) => {
@@ -43,6 +49,42 @@ const MyProfile = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
     }
+  };
+
+  // ✅ Update coordinates via utils.js
+  const handleUpdateLocation = async () => {
+    try {
+      const coords = await getCoordinates();
+      setFormData((prev) => ({
+        ...prev,
+        location: { type: "Point", coordinates: coords },
+      }));
+      setIsProfileChanged(true);
+    } catch (err) {
+      console.error("Failed to get location:", err);
+      alert("Could not fetch location");
+    }
+  };
+
+  // ✅ Field management
+  const [newField, setNewField] = useState("");
+  const handleAddField = () => {
+    if (newField.trim() && !formdata.field.includes(newField.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        field: [...prev.field, newField.trim()],
+      }));
+      setNewField("");
+      setIsProfileChanged(true);
+    }
+  };
+
+  const handleRemoveField = (f) => {
+    setFormData((prev) => ({
+      ...prev,
+      field: prev.field.filter((item) => item !== f),
+    }));
+    setIsProfileChanged(true);
   };
 
   return (
@@ -72,7 +114,10 @@ const MyProfile = () => {
                 alt="avatar"
                 className="w-28 h-28 rounded-full object-cover border border-gray-300 dark:border-gray-600"
               />
-              <label htmlFor="avatarUpload" className="absolute bottom-1 -right-1 bg-[#10B981] text-white p-2 rounded-full cursor-pointer shadow-md hover:scale-105 transition">
+              <label
+                htmlFor="avatarUpload"
+                className="absolute bottom-1 -right-1 bg-[#10B981] text-white p-2 rounded-full cursor-pointer shadow-md hover:scale-105 transition"
+              >
                 <Camera className="h-5 w-5" strokeWidth={2.75} />
               </label>
               <input
@@ -143,6 +188,86 @@ const MyProfile = () => {
                 value={authUser.mobile}
                 disabled
               />
+            </div>
+          </div>
+
+          {/* Lawyer-only Fields */}
+          {authUser.role === "lawyer" && (
+            <>
+              {/* Field Array */}
+              <div className="flex w-full flex-col py-4 gap-3 border-b border-border">
+                <p className="font-medium">Fields</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 bg-sidebar border border-border py-2 rounded px-2"
+                    placeholder="Enter new field"
+                    value={newField}
+                    onChange={(e) => setNewField(e.target.value)}
+                  />
+                  <button
+                    onClick={handleAddField}
+                    className="px-3 py-1 bg-foreground text-background rounded-lg hover:opacity-80"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formdata.field.map((f, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-card px-3 py-1 rounded-lg border border-border flex items-center gap-2 text-sm"
+                    >
+                      {f}
+                      <button onClick={() => handleRemoveField(f)} className="text-red-500">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="flex w-full justify-between py-4 gap-3 border-b border-border items-start">
+                <p className="font-medium w-32">Describe</p>
+                <div className="flex-1">
+                  <textarea
+                    rows={4}
+                    name="description"
+                    onChange={handleChange}
+                    className="max-h-30 w-full bg-sidebar border border-border py-2 rounded px-2"
+                    value={formdata.description}
+                    placeholder="Describe Yourself"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Location */}
+          <div className="flex w-full justify-between py-4 gap-3 border-b border-border items-center">
+            <p className="font-medium w-32">Location</p>
+            <div className="flex-1 flex gap-2">
+              <input
+                type="text"
+                className="w-full bg-sidebar border border-border py-2 rounded px-2"
+                value={formdata.location.coordinates[1] || ""}
+                placeholder="Latitude"
+                disabled
+              />
+              <input
+                type="text"
+                className="w-full bg-sidebar border border-border py-2 rounded px-2"
+                value={formdata.location.coordinates[0] || ""}
+                placeholder="Longitude"
+                disabled
+              />
+              <button
+                onClick={handleUpdateLocation}
+                className="ml-2 p-2 bg-gradient-to-r from-[#028a2f] to-[#018a45] rounded-xl"
+              >
+                <LocateFixed className="size-6" />
+              </button>
             </div>
           </div>
 

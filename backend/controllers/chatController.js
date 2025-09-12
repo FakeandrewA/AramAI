@@ -62,9 +62,10 @@ export const sendMessage = async (req, res) => {
     let streamedContent = "";
     let searchInfo = { stages: [], query: "", urls: [], internalQuery: "", internalUrls: [], ragQuery: "", ragContext: "", error: null };
     let aiMessageSaved = false;
+    let letter = "";
 
     // 3️⃣ Call AI API streaming endpoint
-    let aiServiceUrl = `http://localhost:8000/chat_stream/${encodeURIComponent(query.query)}`;
+    let aiServiceUrl = `http://localhost:8000/chat_stream/${encodeURIComponent((query.query))}`;
     if (checkpoint_id) {
       aiServiceUrl += `?checkpoint_id=${encodeURIComponent(checkpoint_id)}`;
     }
@@ -131,6 +132,9 @@ export const sendMessage = async (req, res) => {
               searchInfo.stages.push("error");
               searchInfo.error = data.message;
               break;
+            case "letter":
+                  letter += data.letter;
+                  break;
             case "end":
               // Now save the complete object
               await Chat.findByIdAndUpdate(chatId, {
@@ -138,15 +142,19 @@ export const sendMessage = async (req, res) => {
               });
               if (streamedContent.trim()) {
                 // Remove duplicates before saving
-                searchInfo.stages = Array.from(new Set(searchInfo.stages));
-                await Chat.findByIdAndUpdate(chatId, {
-                  $push: {
-                    messages: {
+                let messages= {
                       role: "ai",
                       content: streamedContent,
                       searchInfo: searchInfo,
                       messageId: Number(messageId) + 1
-                    },
+                    }
+                if(letter.length !== ""){
+                  messages.letter = letter;
+                }
+                searchInfo.stages = Array.from(new Set(searchInfo.stages));
+                await Chat.findByIdAndUpdate(chatId, {
+                  $push: {
+                    messages
                   },
                 });
                 aiMessageSaved = true;

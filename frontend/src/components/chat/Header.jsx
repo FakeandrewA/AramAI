@@ -11,8 +11,7 @@ const Header = () => {
                   className="font-goldman text-2xl font-semibold"
                 >
                   <div className="flex">
-                    <div className="size-6 rounded-full bg-foreground"></div>
-                    <div className="size-6 rounded-full bg-emerald-500 -ml-3"></div>
+                    <img src="../images/logo.png" alt="" className="size-7" />
                   </div>
         </h1>
         <span className="font-heading font-bold text-xl tracking-tight opacity-80">

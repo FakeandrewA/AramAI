@@ -38,7 +38,11 @@ export const registerUser = async (req, res) => {
                 email,
                 password: hashedPassword,
                 role,
-                chats: []
+                chats: [],
+                location: {
+                    type: "Point",
+                    coordinates: longitude && latitude ? [parseFloat(longitude), parseFloat(latitude)] : [0, 0]
+                }
             });
             await newUser.save();
             res.status(201).json({ message: 'User registered successfully' });
@@ -138,96 +142,111 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
-
 export const updateUserProfile = async (req, res) => {
-    try {
-        const updates = req.body;
-        const file = req.file;
+  try {
+    let updates = { ...req.body };
+    const file = req.file;
 
-        // Find user
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        let profilePicUrl = user.profilePic;
-
-        if (file) {
-            // Delete old file if exists
-            if (user.profilePic && !user.profilePic.includes("gravatar")) {
-                const oldPath = path.join(__dirname, "..", "uploads", path.basename(user.profilePic));
-                if (fs.existsSync(oldPath)) {
-                    fs.unlinkSync(oldPath);
-                }
-            }
-            profilePicUrl = `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user.userId,
-            { ...updates, profilePic: profilePicUrl },
-            { new: true }
-        ).select("-password");
-
-        res.status(200).json(updatedUser);
-    } catch (error) {
-        console.error("Error updating profile:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+    // Parse JSON fields if they exist
+    if (updates.field) {
+      try {
+        updates.field = JSON.parse(updates.field);
+      } catch {
+        updates.field = [];
+      }
     }
+
+    if (updates.location) {
+      try {
+        updates.location = JSON.parse(updates.location);
+      } catch {
+        updates.location = undefined;
+      }
+    }
+
+    // Find user
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Handle profilePic
+    let profilePicUrl = user.profilePic;
+    if (file) {
+      // Delete old file if exists
+      if (user.profilePic && !user.profilePic.includes("gravatar")) {
+        const oldPath = path.join(
+          __dirname,
+          "..",
+          "uploads",
+          path.basename(user.profilePic)
+        );
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+      profilePicUrl = `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
+    }
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      { ...updates, profilePic: profilePicUrl },
+      { new: true }
+    ).select("-password");
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
 
 
 export const findLawyers = async (req, res) => {
-    try {
-        const { field, q, longitude, latitude, maxDistance } = req.query;
+  try {
+    const { field, q, longitude, latitude, maxDistance } = req.body;
 
-        let filters = [{ role: "lawyer" }]; // ensure only lawyers
+    let filters = [{ role: "lawyer" }];
 
-        // text search (name, description, field)
-        if (q) {
-            filters.push({
-                $or: [
-                    { firstName: { $regex: q, $options: "i" } },
-                    { lastName: { $regex: q, $options: "i" } },
-                    { description: { $regex: q, $options: "i" } },
-                    { field: { $regex: q, $options: "i" } },
-                ],
-            });
-        }
-
-        // match at least one field of specialization
-        if (field) {
-            const fields = Array.isArray(field) ? field : field.split(",");
-            filters.push({ field: { $in: fields } });
-        }
-
-        let query = filters.length > 1 ? { $and: filters } : filters[0];
-
-        // ✅ if location provided → add geospatial search
-        let lawyers;
-        if (longitude && latitude) {
-            lawyers = await User.find({
-                ...query,
-                location: {
-                    $near: {
-                        $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
-                        $maxDistance: parseInt(maxDistance) || 5000, // default 5km
-                    },
-                },
-            }).select("-password -chats");
-            
-        console.log(lawyers);
-        } else {
-            lawyers = await User.find(query).select("-password -chats");
-            
-        console.log(lawyers);
-        }
-        console.log(lawyers);
-
-        res.json(lawyers);
-    } catch (error) {
-        console.error("Error fetching lawyers:", error);
-        res.status(500).json({ message: "Server error" });
+    if (q) {
+      filters.push({
+        $or: [
+          { firstName: { $regex: q, $options: "i" } },
+          { lastName: { $regex: q, $options: "i" } },
+          { description: { $regex: q, $options: "i" } },
+          { field: { $regex: q, $options: "i" } },
+        ],
+      });
     }
+
+    if (field && field.length > 0) {
+      const fields = Array.isArray(field) ? field : field.split(",");
+      filters.push({ field: { $in: fields } });
+    }
+
+    const query = filters.length > 1 ? { $and: filters } : filters[0];
+
+    let lawyers;
+    if (longitude && latitude) {
+      lawyers = await User.find({
+        ...query,
+        location: {
+          $near: {
+            $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
+            $maxDistance: parseInt(maxDistance) || 5000,
+          },
+        },
+      }).select("-password -chats");
+    } else {
+      lawyers = await User.find(query).select("-password -chats");
+    }
+
+    res.json(lawyers);
+  } catch (error) {
+    console.error("Error fetching lawyers:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
+
 

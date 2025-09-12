@@ -1,6 +1,7 @@
-import LawerList from '@/components/lawers/LawerList'
+
 import React from 'react'
 import {motion} from "framer-motion"
+import LawyerList from '@/components/lawyers/LawyerList'
 
 const LawyerPage = () => {
   
@@ -13,7 +14,7 @@ const LawyerPage = () => {
             </div>
             <motion.p initial={{y:100,opacity:0}} animate={{y:0,opacity:1}} transition={{duration:0.5 , delay:0.3}} className='text-center text-[16px]'>Experienced professionals across multiple areas of law.</motion.p>
         </div>
-        <LawerList/>
+        <LawyerList/>
     </div>
   )
 }
