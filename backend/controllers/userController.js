@@ -39,7 +39,7 @@ export const registerUser = async (req, res) => {
         res.status(201).json({ message: 'User registered successfully' });
         console.log("New user created:", newUser);
     } catch (error) {
-        res.status(500).json({ message: `Server error: ${error.message}` });
+        res.status(500).json({ message: `Server error` });
     }
 };
 
@@ -77,7 +77,7 @@ export const loginUser = async (req, res) => {
 
         res.status(200).json({ token, user: { ...obj, chats: chats } });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Server error'});
     }
 };
 
@@ -101,7 +101,7 @@ export const getUserProfile = async (req, res) => {
         }));
         res.status(200).json({ ...obj, chats: chats });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Server error'});
     }
 };
 
@@ -123,7 +123,7 @@ export const updateUserProfile = async (req, res) => {
             if (user.profilePic) {
                 // old file path relative to uploads/
                 const oldPath = path.join(
-                    process.cwd(),
+                    __dirname, "..",
                     "uploads",
                     path.basename(user.profilePic)
                 );
@@ -149,24 +149,6 @@ export const updateUserProfile = async (req, res) => {
 };
 
 
-export const updatePassword = async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        const user = await User.findById(req.user.userId).select('+password');
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Current password is incorrect' });
-        }
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedPassword;
-        await user.save();
-        res.status(200).json({ message: 'Password updated successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
+
 
 

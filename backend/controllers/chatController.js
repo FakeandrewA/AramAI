@@ -44,7 +44,12 @@ export const sendMessage = async (req, res) => {
       return res.status(400).json({ message: "chatId and queryreceived required" });
     }
 
-    const query = JSON.parse(queryreceived);
+    let query;
+    try {
+        query = JSON.parse(queryreceived);
+    } catch (error) {
+        return res.status(400).json({ message: "Invalid query format" });
+    }
     console.log(query);
 
 

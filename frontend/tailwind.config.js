@@ -1,6 +1,7 @@
-const plugin = require('tailwindcss/plugin');
+import twAnimate from 'tw-animate';
+import plugin from 'tailwindcss/plugin';
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
     "./index.html",
@@ -61,7 +62,7 @@ module.exports = {
     },
   },
   plugins: [
-    require('tw-animate'),
+    twAnimate,
     plugin(function ({ matchUtilities, theme }) {
       matchUtilities(
         {

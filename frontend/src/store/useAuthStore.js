@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { useNavigate } from "react-router-dom";
 
 
 export const useAuthStore = create((set) => ({
@@ -21,8 +20,7 @@ export const useAuthStore = create((set) => ({
       const result = await response.json();
       if (!response.ok) {
         set({ isLoggingIn: false })
-        const errorData = result.json().catch(() => ({}));
-        throw new Error(errorData.message || "Login failed");
+        throw new Error(result.message || "Login failed");
       }
       if (result.token) {
         localStorage.setItem("authToken", result.token);
@@ -67,8 +65,7 @@ export const useAuthStore = create((set) => ({
   },
   logout: async () => {
     localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
-    navigate("/");
+    set({ authUser: null });
 
   },
   checkAuth: async () => {
