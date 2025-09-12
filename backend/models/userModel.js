@@ -65,6 +65,9 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
+
+    //lawyer
+    
 });
 
 export default mongoose.model('User', userSchema);

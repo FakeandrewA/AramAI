@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
 
 export const registerUser = async (req, res) => {
     try {
@@ -77,7 +79,7 @@ export const loginUser = async (req, res) => {
 
         res.status(200).json({ token, user: { ...obj, chats: chats } });
     } catch (error) {
-        res.status(500).json({ message: 'Server error'});
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -101,7 +103,7 @@ export const getUserProfile = async (req, res) => {
         }));
         res.status(200).json({ ...obj, chats: chats });
     } catch (error) {
-        res.status(500).json({ message: 'Server error'});
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -110,6 +112,9 @@ export const updateUserProfile = async (req, res) => {
     try {
         const updates = req.body;
         const file = req.file;
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+
 
         // Find user
         const user = await User.findById(req.user.userId);
