@@ -9,7 +9,16 @@ from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from pydantic import BaseModel,Field
+from docx import Document
+from striprtf.striprtf import rtf_to_text 
+import tempfile
 load_dotenv()
+
+class DocumentVariable():
+    document_with_var : str = Field(..., description = "Must be a srting of template with ....")
+
+class Link(BaseModel):
+    link: str = Field(..., description="Must be name of the link provided in the context, that is appropriate for the user's query")
 
 class YesNoAnswer(BaseModel):
     answer: str = Field(..., description="Must be either 'yes' or 'no'")

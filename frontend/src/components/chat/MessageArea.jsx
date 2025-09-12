@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef , useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { useAuthStore } from "@/store/useAuthStore";
 import LetterArea from "./LetterArea";
+import { ChevronUp } from "lucide-react";
 
 const PremiumTypingAnimation = () => {
   return (
@@ -32,7 +33,7 @@ const SearchStages = ({ searchInfo }) => {
   console.log(searchInfo)
 
   return (
-    <div className="relative">
+    <div className="relative min-w-30">
         <button className={`absolute -top-3 right-0  flex items-center justify-center z-50 p-2 rounded  ${hideStages?"rotate-180":"rotate-0"}`} onClick={()=>{setHideStages(!hideStages)}}>
                     <ChevronUp className={`size-4 `}/>
         </button> 

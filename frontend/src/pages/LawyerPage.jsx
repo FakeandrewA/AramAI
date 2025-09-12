@@ -1,4 +1,4 @@
-import LawerList from '@/components/lawers/LawerList'
+import LawerList from '@/components/lawyers/LawyerList'
 import React from 'react'
 import {motion} from "framer-motion"
 

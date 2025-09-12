@@ -25,7 +25,7 @@ const InputBar = ({ currentMessage, setCurrentMessage, onSubmit, disabled }) => 
     >
       
       <div className="flex items-center bg-sidebar/60 rounded-xl p-2 shadow-md w-full">
-        <button className={`p-2 rounded-lg transition-all duration-150 ${showLetter?"bg-gradient-to-l opacity-80 from-emerald-500 to-green-600":""}`} type="button" onClick={setShowLetter}>
+        <button className={`p-2 rounded-lg  ${showLetter?"bg-gradient-to-l opacity-80 from-emerald-500 to-green-600 text-white ":""}`} type="button" onClick={setShowLetter}>
           <StickyNote  className=" size-5 "/>
         </button>
         <textarea
