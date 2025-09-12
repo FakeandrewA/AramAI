@@ -14,12 +14,7 @@ export const createChat = async (req, res) => {
     const chat = await Chat.create({
       user: userId,
       name: name,
-      messages: [
-        {
-          role: "ai",
-          content: "Hi there, how can I help you?",
-        },
-      ],
+      messages: [],
     });
 
     // push chatId to user (at start of list, sorted)
@@ -28,9 +23,9 @@ export const createChat = async (req, res) => {
     });
 
     res.status(201).json({
-      chatId: chat._id,
+      _id: chat._id,
       name: chat.name,
-      messages: chat.messages,
+      createdAt: chat.createdAt
     });
   } catch (error) {
     console.error("Error creating chat:", error);
@@ -44,7 +39,7 @@ export const createChat = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { chatId, queryreceived, checkpoint_id } = req.query;
+    const { chatId, queryreceived,messageId , checkpoint_id } = req.query;
     if (!chatId || !queryreceived) {
       return res.status(400).json({ message: "chatId and queryreceived required" });
     }
@@ -54,7 +49,7 @@ export const sendMessage = async (req, res) => {
 
     // 1️⃣ Add user message to DB (optimistic insert)
     await Chat.findByIdAndUpdate(chatId, {
-      $push: { messages: { role: "user", content: query.query } },
+      $push: { messages: { role: "user", content: query.query, messageid: messageId } },
     });
 
     // 2️⃣ Set SSE headers
@@ -103,65 +98,69 @@ export const sendMessage = async (req, res) => {
 
           // Build the persistent searchInfo object on the backend
           switch (data.type) {
-              case "thinking":
-                  searchInfo.stages.push("thinking");
-                  break;
-              case "search_start":
-                  searchInfo.stages.push("searching");
-                  searchInfo.query = data.query;
-                  break;
-              case "search_results":
-                  searchInfo.stages.push("reading");
-                  searchInfo.urls = Array.isArray(data.urls) ? data.urls : [];
-                  break;
-              case "i_search_start":
-                  searchInfo.stages.push("internal_searching");
-                  searchInfo.internalQuery = data.query;
-                  break;
-              case "i_search_results":
-                  searchInfo.stages.push("internal_reading");
-                  const i_urls = Array.isArray(data.urls) ? data.urls : (data.url ? [data.url] : []);
-                  searchInfo.internalUrls = i_urls;
-                  break;
-              case "rag_start":
-                  searchInfo.stages.push("rag_searching");
-                  searchInfo.ragQuery = data.query;
-                  break;
-              case "rag_results":
-                  searchInfo.stages.push("rag_reading");
-                  searchInfo.ragContext = data.context;
-                  break;
-              case "content":
-                  streamedContent += data.content;
-                  break;
-              case "search_error":
-                  searchInfo.stages.push("error");
-                  searchInfo.error = data.message;
-                  break;
-              case "end":
-                  searchInfo.stages.push("writing");
-                  // Now save the complete object
-                  if (streamedContent.trim()) {
-                      // Remove duplicates before saving
-                      searchInfo.stages = Array.from(new Set(searchInfo.stages));
-                      await Chat.findByIdAndUpdate(chatId, {
-                          $push: {
-                              messages: {
-                                  role: "ai",
-                                  content: streamedContent,
-                                  searchInfo: searchInfo,
-                              },
-                          },
-                      });
-                      aiMessageSaved = true;
-                  }
-                  break;
+            case "thinking":
+              searchInfo.stages.push("thinking");
+              break;
+            case "search_start":
+              searchInfo.stages.push("searching");
+              searchInfo.query = data.query;
+              break;
+            case "search_results":
+              searchInfo.stages.push("reading");
+              searchInfo.urls = Array.isArray(data.urls) ? data.urls : [];
+              break;
+            case "i_search_start":
+              searchInfo.stages.push("internal_searching");
+              searchInfo.internalQuery = data.query;
+              break;
+            case "i_search_results":
+              searchInfo.stages.push("internal_reading");
+              const i_urls = Array.isArray(data.urls) ? data.urls : (data.url ? [data.url] : []);
+              searchInfo.internalUrls = i_urls;
+              break;
+            case "rag_start":
+              searchInfo.stages.push("rag_searching");
+              searchInfo.ragQuery = data.query;
+              break;
+            case "rag_results":
+              searchInfo.stages.push("rag_reading");
+              searchInfo.ragContext = data.context;
+              break;
+            case "content":
+              streamedContent += data.content;
+              break;
+            case "search_error":
+              searchInfo.stages.push("error");
+              searchInfo.error = data.message;
+              break;
+            case "end":
+              searchInfo.stages.push("writing");
+              // Now save the complete object
+              if (streamedContent.trim()) {
+                // Remove duplicates before saving
+                searchInfo.stages = Array.from(new Set(searchInfo.stages));
+                await Chat.findByIdAndUpdate(chatId, {
+                  $push: {
+                    messages: {
+                      role: "ai",
+                      content: streamedContent,
+                      searchInfo: searchInfo,
+                    },
+                  },
+                });
+                aiMessageSaved = true;
+              }
+              break;
           }
         } catch (err) {
+          await Chat.findByIdAndUpdate(chatId, {
+            $pop: { messages: 1 },
+          });
           console.error("Error parsing AI chunk:", err, line);
           res.write(
             `data: ${JSON.stringify({ type: "search_error", message: "AI chunk parse error" })}\n\n`
           );
+
         }
       }
     }
@@ -206,51 +205,18 @@ export const getChatMessages = async (req, res) => {
       return res.status(404).json({ error: "Chat not found" });
     }
 
-    res.status(200).json({ messages: chat.messages });
+    // Sort messages by messageid (ascending)
+    const sortedMessages = [...chat.messages].sort((a, b) => a.messageid - b.messageid);
+
+    res.status(200).json({ messages: sortedMessages });
   } catch (error) {
     console.error("Error fetching messages:", error);
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 };
 
+
 /**
  * Get user chat list sorted by newest
  */
-
-export const getUserChats = async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ error: "Invalid userId" });
-    }
-
-    const user = await User.findById(userId)
-      .populate({
-        path: "chats",
-        options: { sort: { createdAt: -1 } }, // sort by most recent
-      })
-      .lean();
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const chats = (user.chats || []).map((chat) => ({
-      chatId: chat._id,
-      name: chat.name,
-      createdAt: chat.createdAt,
-    }));
-
-    res.status(200).json({
-      userId: user._id,
-      chatCount: chats.length,
-      chats,
-    });
-  } catch (error) {
-    console.error("Error fetching user chats:", error);
-    res.status(500).json({ error: "Failed to fetch chats" });
-  }
-};
 
