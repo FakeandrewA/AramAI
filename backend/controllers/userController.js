@@ -142,42 +142,64 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
-
 export const updateUserProfile = async (req, res) => {
-    try {
-        const updates = req.body;
-        const file = req.file;
+  try {
+    let updates = { ...req.body };
+    const file = req.file;
 
-        // Find user
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        let profilePicUrl = user.profilePic;
-
-        if (file) {
-            // Delete old file if exists
-            if (user.profilePic && !user.profilePic.includes("gravatar")) {
-                const oldPath = path.join(__dirname, "..", "uploads", path.basename(user.profilePic));
-                if (fs.existsSync(oldPath)) {
-                    fs.unlinkSync(oldPath);
-                }
-            }
-            profilePicUrl = `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user.userId,
-            { ...updates, profilePic: profilePicUrl },
-            { new: true }
-        ).select("-password");
-
-        res.status(200).json(updatedUser);
-    } catch (error) {
-        console.error("Error updating profile:", error);
-        res.status(500).json({ message: "Server error", error: error.message });
+    // Parse JSON fields if they exist
+    if (updates.field) {
+      try {
+        updates.field = JSON.parse(updates.field);
+      } catch {
+        updates.field = [];
+      }
     }
+
+    if (updates.location) {
+      try {
+        updates.location = JSON.parse(updates.location);
+      } catch {
+        updates.location = undefined;
+      }
+    }
+
+    // Find user
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Handle profilePic
+    let profilePicUrl = user.profilePic;
+    if (file) {
+      // Delete old file if exists
+      if (user.profilePic && !user.profilePic.includes("gravatar")) {
+        const oldPath = path.join(
+          __dirname,
+          "..",
+          "uploads",
+          path.basename(user.profilePic)
+        );
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+      profilePicUrl = `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
+    }
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      { ...updates, profilePic: profilePicUrl },
+      { new: true }
+    ).select("-password");
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
 
 

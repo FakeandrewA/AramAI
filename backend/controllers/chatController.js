@@ -64,7 +64,7 @@ export const sendMessage = async (req, res) => {
     let aiMessageSaved = false;
 
     // 3️⃣ Call AI API streaming endpoint
-    let aiServiceUrl = `http://localhost:8000/chat_stream/${encodeURIComponent(JSON.stringify(query))}`;
+    let aiServiceUrl = `http://localhost:8000/chat_stream/${encodeURIComponent((query.query))}`;
     if (checkpoint_id) {
       aiServiceUrl += `?checkpoint_id=${encodeURIComponent(checkpoint_id)}`;
     }
