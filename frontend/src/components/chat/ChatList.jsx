@@ -5,12 +5,12 @@ import { useNavigate , useParams } from "react-router-dom";
 const ChatList = ({ chats, onNewChat, userId }) => {
 
   const navigate = useNavigate();
-  console.log(chats);
   const [activeChatId, setActiveChatId] = useState(chats[0]._id);
   const handleNewChat = async () => {
     const chat = await onNewChat(userId);
-    if (chat?.chatId) {
-      navigate(`/chat/${chat.chatId}`);
+    console.log(chat);
+    if (chat?._id) {
+      navigate(`/chat/${chat._id}`);
     }
   };
 
