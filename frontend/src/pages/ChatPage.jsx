@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 const ChatPage = () => {
 
     const { authUser, getMessages } = useAuthStore();
+    const chats = authUser.chats;
     const [messages, setMessages] = useState([]);
     let { chatId } = useParams();
     if (chatId == null) {
@@ -89,6 +90,7 @@ const ChatPage = () => {
                 eventSource.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
+                        // Use a new object to ensure state updates correctly
                         let newSearchInfo = { ...searchData, stages: [...searchData.stages] };
 
                         switch (data.type) {
@@ -125,7 +127,6 @@ const ChatPage = () => {
                                 newSearchInfo.ragContext = data.context;
                                 break;
                             case "content":
-                                newSearchInfo.stages.push("writing");
                                 streamedContent += data.content;
                                 hasReceivedContent = true;
                                 break;
@@ -136,8 +137,7 @@ const ChatPage = () => {
                                 eventSource.close();
                                 break;
                             case "end":
-                                newSearchInfo.stages = newSearchInfo.stages.filter(stage => stage!=="writing");
-                                console.log(newSearchInfo.stages);
+                                newSearchInfo.stages.push("writing");
                                 setReceiving(false);
                                 eventSource.close();
                                 break;
@@ -161,7 +161,6 @@ const ChatPage = () => {
                 };
 
                 eventSource.onerror = (error) => {
-                    setReceiving(false);
                     console.error("EventSource error:", error);
                     eventSource.close();
 
@@ -177,7 +176,7 @@ const ChatPage = () => {
                                     : msg
                             )
                         );
-                    
+                    setReceiving(false);
                 };
 
                 eventSource.addEventListener("end", () => {
@@ -185,7 +184,6 @@ const ChatPage = () => {
                     setReceiving(false);
                 });
             } catch (error) {
-                setReceiving(false);
                 console.error("Error setting up EventSource:", error);
                 setMessages((prev) => [
                     ...prev,
@@ -197,6 +195,7 @@ const ChatPage = () => {
                         isLoading: false,
                     },
                 ]);
+                setReceiving(false);
             }
         }
     };
