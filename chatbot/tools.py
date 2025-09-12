@@ -9,7 +9,7 @@ from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from pydantic import BaseModel,Field
-from docx import Document
+import docx
 from striprtf.striprtf import rtf_to_text 
 import tempfile
 load_dotenv()
@@ -181,7 +181,7 @@ def draft_document(query : str):
 
     # extract text based on type
     if file_format == ".docx":
-        doc = Document(file_path)
+        doc = docx.Document(file_path)
         template = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
     elif file_format == ".rtf":
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -191,6 +191,8 @@ def draft_document(query : str):
     print("Extracted Text:\n", template)
 
     llm_var = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+
+    
     llm_var_with_structure = llm_var.with_structured_output(DocumentVariable)
 
     
