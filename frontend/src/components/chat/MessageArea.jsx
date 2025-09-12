@@ -2,6 +2,8 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
+import { useAuthStore } from "@/store/useAuthStore";
+import LetterArea from "./LetterArea";
 
 const PremiumTypingAnimation = () => {
   return (
@@ -165,9 +167,10 @@ const MessageArea = ({ messages }) => {
   }
   return (
     <div
-      className=" bg-background h-full  w-[95%]  md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%]"
+      className=" bg-background h-full  w-[95%]  md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%] "
       style={{ minHeight: 0 }}
-    >
+    > 
+      <LetterArea/>
       <div className=" mx-auto p-6">
         {messages.map((message) => (
           <div

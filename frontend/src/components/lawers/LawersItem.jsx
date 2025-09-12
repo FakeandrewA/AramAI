@@ -27,7 +27,7 @@ const LawersItem = () => {
             <p className='text-sm'> ⭐⭐⭐⭐</p>
         </div>
         <div className='flex justify-end w-full'>
-            <button className='px-4 hover:scale-103 transition-all duration-150 py-2 bg-gradient-to-r  from-emerald-500 to-green-700 rounded'>
+            <button className='px-4 hover:scale-103 text-white border border-border transition-all duration-150 py-2 bg-gradient-to-r  from-emerald-500 to-green-700 rounded'>
                 Contact
             </button>
         </div>
