@@ -37,32 +37,35 @@ export const useAuthStore = create((set) => ({
 
   },
   signup: async (formData) => {
-    set({ isSigningUp: true })
-    try {
-      const options = { method: "POST" };
-      if (formData instanceof FormData) {
-        options.body = formData;
-      }
-      else {
-        options.headers = { "Content-Type": "application/json" };
-        options.body = JSON.stringify(formData);
-      }
-
-      const response = await fetch("http://localhost:5000/api/users/register", options);
-
-      if (!response.ok) {
-        set({ isSigningUp: false })
-        const errorData = await response.json().catch(() => ({}));
-        return errorData;
-      }
-      alert("Signup successful! Please log in.");
-    } catch (err) {
-      console.error("Signup error:", err);
+  set({ isSigningUp: true })
+  try {
+    const options = { method: "POST" };
+    if (formData instanceof FormData) {
+      options.body = formData;
+    } else {
+      options.headers = { "Content-Type": "application/json" };
+      options.body = JSON.stringify(formData);
     }
-    finally {
-      set({ isSigningUp: false })
+
+    const response = await fetch("http://localhost:5000/api/users/register", options);
+
+    const data = await response.json().catch(() => ({})); // 👈 parse JSON always
+
+    if (!response.ok) {
+      return { ok: false, ...data };
     }
-  },
+    alert("SignUp Succefull, Please Login!");
+    return { ok: true, ...data }; // 👈 now safe
+  } catch (err) {
+    console.error("Signup error:", err);
+    return { ok: false, message: "Network error" };
+  } finally {
+    set({ isSigningUp: false })
+  }
+},
+
+
+
   logout: async () => {
     localStorage.removeItem("authToken");
     set({ authUser: null });
@@ -213,7 +216,7 @@ export const useAuthStore = create((set) => ({
 
       // Build query string
       const queryParams = new URLSearchParams(filters).toString();
-      const response = await fetch(`http://localhost:5000/api/lawyers/search?${queryParams}`, {
+      const response = await fetch(`http://localhost:5000/api/users/lawyer/search?${queryParams}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

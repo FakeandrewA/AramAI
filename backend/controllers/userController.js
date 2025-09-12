@@ -12,7 +12,7 @@ export const registerUser = async (req, res) => {
     try {
         console.log("Request body:", req.body);
         console.log("Request file:", req.file);
-        const { firstName, lastName, email, password, mobile, age, role } = req.body;
+        const { firstName, lastName, email, password, mobile, age, role, latitude, longitude } = req.body;
         const profilePicUrl = req.file
             ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
             : null;
@@ -54,12 +54,16 @@ export const registerUser = async (req, res) => {
                 password: hashedPassword,
                 role,
                 chats: [],
-                field: {},
+                field: [],
                 description: "",
                 experience: 0,
                 rating: {
                     count: 0,
-                    review: [],
+                    reviews: [],   // match schema field
+                },
+                location: {
+                    type: "Point",
+                    coordinates: longitude && latitude ? [parseFloat(longitude), parseFloat(latitude)] : [0, 0]
                 }
             });
             await newUser.save();
@@ -67,6 +71,7 @@ export const registerUser = async (req, res) => {
             console.log("New user created:", newUser);
         }
     } catch (error) {
+        console.log(error.message);
         res.status(500).json({ message: `Server error` });
     }
 };
@@ -173,51 +178,56 @@ export const updateUserProfile = async (req, res) => {
 
 
 export const findLawyers = async (req, res) => {
-  try {
-    const { field, q, longitude, latitude, maxDistance } = req.query;
+    try {
+        const { field, q, longitude, latitude, maxDistance } = req.query;
 
-    let filters = [{ role: "lawyer" }]; // ensure only lawyers
+        let filters = [{ role: "lawyer" }]; // ensure only lawyers
 
-    // text search (name, description, field)
-    if (q) {
-      filters.push({
-        $or: [
-          { firstName: { $regex: q, $options: "i" } },
-          { lastName: { $regex: q, $options: "i" } },
-          { description: { $regex: q, $options: "i" } },
-          { field: { $regex: q, $options: "i" } },
-        ],
-      });
+        // text search (name, description, field)
+        if (q) {
+            filters.push({
+                $or: [
+                    { firstName: { $regex: q, $options: "i" } },
+                    { lastName: { $regex: q, $options: "i" } },
+                    { description: { $regex: q, $options: "i" } },
+                    { field: { $regex: q, $options: "i" } },
+                ],
+            });
+        }
+
+        // match at least one field of specialization
+        if (field) {
+            const fields = Array.isArray(field) ? field : field.split(",");
+            filters.push({ field: { $in: fields } });
+        }
+
+        let query = filters.length > 1 ? { $and: filters } : filters[0];
+
+        // ✅ if location provided → add geospatial search
+        let lawyers;
+        if (longitude && latitude) {
+            lawyers = await User.find({
+                ...query,
+                location: {
+                    $near: {
+                        $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
+                        $maxDistance: parseInt(maxDistance) || 5000, // default 5km
+                    },
+                },
+            }).select("-password -chats");
+            
+        console.log(lawyers);
+        } else {
+            lawyers = await User.find(query).select("-password -chats");
+            
+        console.log(lawyers);
+        }
+        console.log(lawyers);
+
+        res.json(lawyers);
+    } catch (error) {
+        console.error("Error fetching lawyers:", error);
+        res.status(500).json({ message: "Server error" });
     }
-
-    // match at least one field of specialization
-    if (field) {
-      const fields = Array.isArray(field) ? field : field.split(",");
-      filters.push({ field: { $in: fields } });
-    }
-
-    let query = filters.length > 1 ? { $and: filters } : filters[0];
-
-    // ✅ if location provided → add geospatial search
-    let lawyers;
-    if (longitude && latitude) {
-      lawyers = await User.find({
-        ...query,
-        location: {
-          $near: {
-            $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
-            $maxDistance: parseInt(maxDistance) || 5000, // default 5km
-          },
-        },
-      }).select("-password -chats");
-    } else {
-      lawyers = await User.find(query).select("-password -chats");
-    }
-
-    res.json(lawyers);
-  } catch (error) {
-    console.error("Error fetching lawyers:", error);
-    res.status(500).json({ message: "Server error" });
-  }
 };
 
