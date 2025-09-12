@@ -39,7 +39,7 @@ export const createChat = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { chatId, queryreceived,messageId , checkpoint_id } = req.query;
+    const { chatId, queryreceived, messageId, checkpoint_id } = req.query;
     if (!chatId || !queryreceived) {
       return res.status(400).json({ message: "chatId and queryreceived required" });
     }
@@ -47,10 +47,6 @@ export const sendMessage = async (req, res) => {
     const query = JSON.parse(queryreceived);
     console.log(query);
 
-    // 1️⃣ Add user message to DB (optimistic insert)
-    await Chat.findByIdAndUpdate(chatId, {
-      $push: { messages: { role: "user", content: query.query, messageId: messageId } },
-    });
 
     // 2️⃣ Set SSE headers
     res.setHeader("Content-Type", "text/event-stream");
@@ -132,6 +128,9 @@ export const sendMessage = async (req, res) => {
               break;
             case "end":
               // Now save the complete object
+              await Chat.findByIdAndUpdate(chatId, {
+                $push: { messages: { role: "user", content: query.query, messageId: messageId } },
+              });
               if (streamedContent.trim()) {
                 // Remove duplicates before saving
                 searchInfo.stages = Array.from(new Set(searchInfo.stages));
@@ -141,7 +140,7 @@ export const sendMessage = async (req, res) => {
                       role: "ai",
                       content: streamedContent,
                       searchInfo: searchInfo,
-                      messageId: Number(messageId)+1
+                      messageId: Number(messageId) + 1
                     },
                   },
                 });
@@ -150,9 +149,6 @@ export const sendMessage = async (req, res) => {
               break;
           }
         } catch (err) {
-          await Chat.findByIdAndUpdate(chatId, {
-            $pop: { messages: 1 },
-          });
           console.error("Error parsing AI chunk:", err, line);
           res.write(
             `data: ${JSON.stringify({ type: "search_error", message: "AI chunk parse error" })}\n\n`
@@ -163,23 +159,10 @@ export const sendMessage = async (req, res) => {
     }
 
     // 4️⃣ If no AI message saved → rollback user message
-    if (!aiMessageSaved) {
-      await Chat.findByIdAndUpdate(chatId, {
-        $pop: { messages: 1 }, // remove last inserted message (the user one)
-      });
-    }
 
     res.end();
   } catch (error) {
     console.error("Error in sendMessage:", error);
-
-    // Rollback user message on failure
-    const { chatId } = req.query;
-    if (chatId) {
-      await Chat.findByIdAndUpdate(chatId, {
-        $pop: { messages: 1 },
-      });
-    }
 
     res.write(
       `data: ${JSON.stringify({ type: "search_error", message: "Failed to connect to AI" })}\n\n`

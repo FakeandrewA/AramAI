@@ -142,7 +142,6 @@ const ChatPage = () => {
                                 break;
                             case "end":
                                 newSearchInfo.stages = newSearchInfo.stages.filter(stage => stage!=="writing");
-                                console.log(newSearchInfo.stages);
                                 setReceiving(false);
                                 eventSource.close();
                                 break;
