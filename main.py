@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from chatbot.graph import create_app_async
 import json
+from langgraph.prebuilt import ToolNode
 from typing import Optional
 from uuid import uuid4
 from contextlib import asynccontextmanager
@@ -77,7 +78,7 @@ async def generate_chat_responses(message: str, checkpoint_id: Optional[str] = N
 
     async for event in events:
         event_type = event["event"]
-        
+        print("Event Start:",event,end="\n\n\n")
         # 🔹 LLM started reasoning
         if event_type == "on_chat_model_start":
             yield f"data: {json.dumps({'type': 'thinking'})}\n\n"
@@ -90,6 +91,7 @@ async def generate_chat_responses(message: str, checkpoint_id: Optional[str] = N
 
         # 🔹 Tool starts (like search query)
         elif event_type == "on_tool_start": 
+            
             if event.get("name") == "rag_tool":
                 # Send "search_start" immediately with the query
                 search_query = event["data"].get("input", {}).get("query", "")
@@ -104,21 +106,21 @@ async def generate_chat_responses(message: str, checkpoint_id: Optional[str] = N
         # 🔹 Tool ends (returning results)
         elif event_type == "on_tool_end":
             if event.get("name") == "rag_tool":
-                output = event["data"]["output"].content[100:200]+"......"
+                output = event["data"]["output"][100:200]+"......"
                 yield f"data: {json.dumps({'type': 'rag_results', 'context': output})}\n\n"
             elif event.get("name") == "tavily_search":
                 output = event["data"]["output"]
-                if hasattr(output, "content"):
-                    parsed = json.loads(output.content)
-                    results = parsed.get("results", [])
-                    urls = [r["url"] for r in results if "url" in r]
-                    yield f"data: {json.dumps({'type': 'search_results', 'urls': urls})}\n\n"
+                results = output["results"]
+                urls = [r["url"] for r in results]
+                yield f"data: {json.dumps({'type':'search_results','urls':urls})}\n\n"
             elif event.get("name") == "indian_kannon_search_tool":
                 output = event["data"]["output"]
-                results = json.loads(output.content)
-                url = results[0].get("link", "")
+                url = output[0].get("link", "")
                 yield f"data: {json.dumps({'type': 'i_search_results', 'url': url})}\n\n"
-
+            elif event.get("name") == "draft_selection_tool":
+                output =event["data"]["output"]
+                obj = json.loads(output)
+                yield f"data: {json.dumps({'type':'letter','letter':obj['letter']})}\n\n"
     # 🔹 End of stream
     yield f"data: {json.dumps({'type': 'end'})}\n\n"
 

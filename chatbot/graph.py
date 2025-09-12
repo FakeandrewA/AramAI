@@ -1,8 +1,7 @@
-# new file or replace chatbot/graph.py contents that create `app`
+# chatbot/graph.py
 from chatbot.schema import base_state
 from langgraph.graph import StateGraph, END
 from chatbot.nodes import tool_node, model
-from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 import aiosqlite
 
@@ -17,18 +16,25 @@ async def create_app_async():
     graph.add_node("tool_node", tool_node)
     graph.set_entry_point("model")
 
-    def should_use_tool(state : base_state):
+    # Router for model → tool or end
+    def should_use_tool(state: base_state):
         last_message = state["messages"][-1]
         if (hasattr(last_message, "tool_calls") and len(last_message.tool_calls) > 0):
             return "use_tools"
         return "no_tools"
 
-    graph.add_edge("tool_node", "model")
     graph.add_conditional_edges("model", should_use_tool, path_map={
         "use_tools": "tool_node",
         "no_tools": END
     })
 
+    # Router for tool_node → either back to model or stop
+    def tool_router(state: base_state):
+        if state.get("end"):   # set by draft_selection_tool in tool_node
+            return END
+        return "model"
+
+    graph.add_conditional_edges("tool_node", tool_router)
+
     app = graph.compile(checkpointer=memory)
     return app, conn  # Return the connection
-

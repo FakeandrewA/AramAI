@@ -1,12 +1,14 @@
 from chatbot.schema import base_state
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate,MessagesPlaceholder
-from chatbot.tools import indian_kannon_search_tool,rag_tool
+from chatbot.tools import indian_kannon_search_tool,rag_tool,draft_selection_tool
 from langgraph.prebuilt import ToolNode
 from langchain_tavily import TavilySearch
 from langchain_core.messages import ToolMessage
+from langchain.schema import SystemMessage
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+import json
 
 system_prompt = """
     You are a legal assistant specialized in Indian law. 
@@ -41,6 +43,7 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 search_tool = TavilySearch(
     max_results=4,
 )
+tools = [search_tool, indian_kannon_search_tool,rag_tool,draft_selection_tool]
 
 async def model(state : base_state) -> base_state:
     
@@ -55,53 +58,83 @@ async def model(state : base_state) -> base_state:
     }
 
 
-
 async def tool_node(state):
     """Custom tool node that handles tool calls from the LLM."""
 
     tool_calls = state["messages"][-1].tool_calls
-    
     tool_messages = []
-    
+
+    stop_after_this = False   # 👈 flag to short-circuit
+
     for tool_call in tool_calls:
         tool_name = tool_call["name"]
         tool_args = tool_call["args"]
         tool_id = tool_call["id"]
-        
-        if tool_name == "tavily_search_results_json":
 
+        if tool_name == "tavily_search":
             search_results = await search_tool.ainvoke(tool_args)
-            
             tool_message = ToolMessage(
                 content=str(search_results),
                 tool_call_id=tool_id,
                 name=tool_name
             )
-            
             tool_messages.append(tool_message)
-        
+
         elif tool_name == "indian_kannon_search_tool":
-
             search_results = await indian_kannon_search_tool.ainvoke(tool_args)
+            tool_message = ToolMessage(
+                content=search_results,
+                tool_call_id=tool_id,
+                name=tool_name,
+            )
+            tool_messages.append(tool_message)
+
+        elif tool_name == "rag_tool":
+            context = await rag_tool.ainvoke(tool_args)
+            tool_message = ToolMessage(
+                content=context,
+                tool_call_id=tool_id,
+                name=tool_name,
+            )
+            tool_messages.append(tool_message)
+
+        elif tool_name == "draft_selection_tool":
+            draft_object = await draft_selection_tool.ainvoke(tool_args)
+
+            # If tool returns JSON string
+            if isinstance(draft_object, str):
+                obj = json.loads(draft_object)
+            else:
+                obj = draft_object  # already dict
 
             tool_message = ToolMessage(
-                content = search_results,
-                tool_call_id = tool_id,
-                name = tool_name,
+                content=draft_object,
+                tool_call_id=tool_id,
+                name=tool_name,
             )
-        elif tool_name == "rag_tool":
-            
-            context = await rag_tool.ainvoke(tool_args)
-    
-            tool_message = ToolMessage(
-                content = context,
-                tool_call_id = tool_id,
-                name = tool_name,
+            tool_messages.append(tool_message)
+
+            variables_json = json.dumps(obj.get("variables", []))
+            system_msg_text = (
+                "We are in Drafting Mode. To ensure safety, first collect all these variables "
+                f"from the user before returning to normal mode.\n"
+                f"The variables are {variables_json}. "
+                "Make sure to ask a question for each variable."
             )
-            
-    # Add the tool messages to the state
+
+            tool_messages.append(SystemMessage(content=system_msg_text))
+
+            stop_after_this = True
+
+    # If draft_selection_tool was used → stop here
+    if stop_after_this:
+        # return tool outputs as final state
+        return {"messages": tool_messages, "end": True}
+
+    # Otherwise continue as usual
     return {"messages": tool_messages}
 
-tools = [search_tool, indian_kannon_search_tool,rag_tool]
 
-tool_node = ToolNode(tools = tools)
+
+
+# tool_node = ToolNode(tools = tools)

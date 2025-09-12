@@ -8,14 +8,30 @@ from retrieval.utils import get_relevant_points,get_client
 from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
-from pydantic import BaseModel,Field
+from pydantic import BaseModel,Field,field_validator
 import docx
 from striprtf.striprtf import rtf_to_text 
 import tempfile
+from typing import List,Dict
+import json
+
 load_dotenv()
 
-class DocumentVariable():
-    document_with_var : str = Field(..., description = "Must be a srting of template with ....")
+### Pydantic Models
+
+class Drafter(BaseModel):
+    """A model to hold the extracted placeholder tags for the legal document."""
+    tags_dict: Dict[str, str] =Field(...,description="Return tags_dict as a valid JSON object (not Python dict, no extra backslashes). Keys must start with [ and end with ].")
+    edited_draft:str=Field(...,description="Provide the edited draft where the placeholders are changed into tags")
+    @field_validator('tags_dict', mode='before')
+    @classmethod
+    def parse_json_string(cls, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                raise ValueError("tags_dict contains an invalid JSON string")
+        return value
 
 class Link(BaseModel):
     link: str = Field(..., description="Must be name of the link provided in the context, that is appropriate for the user's query")
@@ -23,8 +39,17 @@ class Link(BaseModel):
 class YesNoAnswer(BaseModel):
     answer: str = Field(..., description="Must be either 'yes' or 'no'")
 
-llm = ChatGoogleGenerativeAI(
+### Custom LLMs
+
+relevance_checker = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash").with_structured_output(YesNoAnswer)
+
+draft_selector = ChatGoogleGenerativeAI(model="gemini-2.5-flash").with_structured_output(Link)
+
+drafter_llm  = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash").with_structured_output(Drafter)
+
+### Prompt templates
 
 rag_relevance_template = PromptTemplate.from_template("""You are legal assistant who excel in checking relevance of documents retrieved by the RAG with the users query.
 Your task is provide 'yes' if there is relevance or 'no'. dont generate anything else
@@ -33,7 +58,27 @@ Here is the Retrieved Context:
 {context}
 """)
 
-rag_relevance_chain = rag_relevance_template | llm
+draft_selecting_template = PromptTemplate.from_template("""
+Your are a professional legal document drafter , who helps in selecting which draft is to be filled for the user's query
+user_query:{query},
+    The Documents to select from:{context}
+""")
+
+draft_formatter_template = PromptTemplate.from_template("""
+Your are a professional legal document drafter, Help me fill tags in this draft example, fill the blank with appropriate placeholder and send back the original draft i send you with replacing the blanks with placeholder 
+,dont change any other markdown that will mess with the formatting of the draft
+here is the draft with placeholders:{draft}
+""")
+
+### Chains
+
+select_chain = draft_selecting_template | draft_selector 
+
+rag_relevance_chain = rag_relevance_template | relevance_checker
+
+draft_formatter_chain = draft_formatter_template | drafter_llm
+
+### Helper Functions
 
 def extract_tokens_with_bs4(text: str):
     """Extract tokens using BeautifulSoup, lowercase + simple split."""
@@ -42,6 +87,8 @@ def extract_tokens_with_bs4(text: str):
     tokens = [w.lower() for w in clean_text.split() if len(w) > 2]
     stopwords = {"the", "and", "for", "with", "that", "from", "case", "law"}
     return [t for t in tokens if t not in stopwords]
+
+### Tools
 
 @tool
 def rag_tool(query:str,rerank:bool,top_k:int,top_rerank_k:int):
@@ -143,26 +190,18 @@ def indian_kannon_search_tool(query: str, pagenum: int = 1):
 
     return results if results else "No results found."
 
-
-
 @tool
-def draft_document(query : str):
-    """This tool helps to draft a legal document according to the query of user. Choose a correct document
-     template for the document filling perpous"""
+def draft_selection_tool(query : str):
+    """Use This Tool to Fetch The Relevant Draft that aligns with users query and get a edited format of the draft and all the variables user need to file in order to complete the draft
+    Send user's query with improved context for llm to assist with the search
+    """
 
-    context = ""
+    with open("D:/AramAI/data/drafts/data.txt", "r") as f:
+        context = f.read()
 
-    llm_select = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    print("context: ",context,end="\n\n\n")
 
-    llm_select_with_structure = llm_select.with_structured_output(Link)
-
-    prompt = PromptTemplate.from_template("""
-    
-    """)
-
-    select_chain = prompt | llm_select_with_structure 
-
-    file_link = select_chain.invoke().link or ""
+    file_link = select_chain.invoke({"query":query,"context":context}).link
     if file_link.lower().endswith(".docx"):
         file_format = ".docx"
     elif file_link.lower().endswith(".rtf"):
@@ -180,19 +219,21 @@ def draft_document(query : str):
     print(f"Downloaded file saved at: {file_path}")
 
     # extract text based on type
+    draft = ""
     if file_format == ".docx":
         doc = docx.Document(file_path)
-        template = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
+        draft = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
     elif file_format == ".rtf":
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             rtf_content = f.read()
-            text = rtf_to_text(rtf_content)
+            draft = rtf_to_text(rtf_content)
 
-    print("Extracted Text:\n", template)
+    draft_with_variables = draft_formatter_chain.invoke({"draft":draft})
+    return json.dumps({
+    "letter": str(draft_with_variables.edited_draft),
+    "variables": dict(draft_with_variables.tags_dict)
+    })
 
-    llm_var = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
-    
-    llm_var_with_structure = llm_var.with_structured_output(DocumentVariable)
 
     
