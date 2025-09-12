@@ -49,7 +49,7 @@ export const sendMessage = async (req, res) => {
 
     // 1️⃣ Add user message to DB (optimistic insert)
     await Chat.findByIdAndUpdate(chatId, {
-      $push: { messages: { role: "user", content: query.query, messageid: messageId } },
+      $push: { messages: { role: "user", content: query.query, messageId: messageId } },
     });
 
     // 2️⃣ Set SSE headers
@@ -145,6 +145,7 @@ export const sendMessage = async (req, res) => {
                       role: "ai",
                       content: streamedContent,
                       searchInfo: searchInfo,
+                      messageId: messageId+1
                     },
                   },
                 });

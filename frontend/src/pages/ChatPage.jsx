@@ -8,16 +8,14 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 const ChatPage = () => {
 
-    const { authUser, getMessages, createChat } = useAuthStore();
+    const { authUser, getMessages } = useAuthStore();
     const chats = authUser.chats;
     const [messages, setMessages] = useState([]);
     let { chatId } = useParams();
     if (chatId == null) {
         return <Navigate to='/onBoarding' />;
     }
-    // console.log("Current chat id:", chatId);
     useEffect(() => {
-        // console.log("chatId", chatId);
         const fetchMessages = async () => {
             try {
                 const msgs = await getMessages(chatId);
@@ -39,7 +37,7 @@ const ChatPage = () => {
         e.preventDefault();
         setReceiving(true);
         if (currentMessage.trim()) {
-            const newMessageId = Date.now();
+            const newMessageId = messages.length + 1;
 
             setMessages((prev) => [
                 ...prev,
@@ -56,7 +54,7 @@ const ChatPage = () => {
             setCurrentMessage("");
 
             try {
-                const aiResponseId = Date.now() + 1;
+                const aiResponseId = newMessageId + 1;
                 setMessages((prev) => [
                     ...prev,
                     {
@@ -79,7 +77,7 @@ const ChatPage = () => {
                     query: userInput,
                     messageId: aiResponseId,
                 };
-                let url = `http://localhost:5000/api/chats/send?chatId=${chatId}&queryreceived=${encodeURIComponent(JSON.stringify(message))}`;
+                let url = `http://localhost:5000/api/chats/send?chatId=${chatId}&messageId=${newMessageId}&queryreceived=${encodeURIComponent(JSON.stringify(message))}`;
                 if (checkpointId) {
                     url += `&checkpoint_id=${encodeURIComponent(checkpointId)}`;
                 }
