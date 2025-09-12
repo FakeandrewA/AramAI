@@ -1,4 +1,4 @@
-import { ChevronDown, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { useAuthStore } from '@/store/useAuthStore';
@@ -6,7 +6,6 @@ import LawyersItem from './LawyersItem';
 
 const LawyerList = () => {
   const [search, setSearch] = useState("");
-  const [showLess, setShowLess] = useState(true);
   const [lawyers, setLawyers] = useState([]);
   const { findLawyers, authUser } = useAuthStore();
 
@@ -34,7 +33,6 @@ const LawyerList = () => {
     fetchData();
   }, [search, findLawyers, authUser]);
 
-
   return (
     <div className="w-full mt-20 space-y-10">
       {/* Search Input */}
@@ -61,25 +59,16 @@ const LawyerList = () => {
         transition={{ duration: 0.6, delay: 0.4 }}
         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-8 relative"
       >
-        <button
-          className={`absolute -bottom-12 right-0 px-3 py-1 bg-foreground/10 rounded ${showLess ? "" : "rotate-180"
-            }`}
-          onClick={() => {
-            setShowLess(!showLess);
-          }}
-        >
-          <ChevronDown className="size-4" />
-        </button>
-
         {lawyers.length === 0 ? (
           <p className="text-sm text-gray-500 col-span-full">No lawyers found.</p>
         ) : (
-          lawyers.slice(0, showLess ? 6 : 12).map((lawyer, i) => (
+          lawyers.map((lawyer, i) => (
             <motion.div
               key={lawyer._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.02 }}
+              className="w-full"
             >
               <LawyersItem lawyer={lawyer} />
             </motion.div>

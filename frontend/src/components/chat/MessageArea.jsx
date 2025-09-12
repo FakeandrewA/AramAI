@@ -34,7 +34,7 @@ const SearchStages = ({ searchInfo }) => {
 
   return (
     <div className="relative min-w-30">
-        <button className={`absolute -top-3 right-0  flex items-center justify-center z-50 p-2 rounded  ${hideStages?"rotate-180":"rotate-0"}`} onClick={()=>{setHideStages(!hideStages)}}>
+        <button className={`absolute -top-6 -left-[7px] flex items-center justify-center z-50 p-2 rounded  ${hideStages?"rotate-180":"rotate-0"}`} onClick={()=>{setHideStages(!hideStages)}}>
                     <ChevronUp className={`size-4 `}/>
         </button> 
       <motion.div
@@ -160,7 +160,7 @@ const MessageArea = ({ messages }) => {
   }, [messages]);
   if (messages.length == 0) {
     return (
-      <div className="bg to-background h-full  w-full space-y-6 flex flex-col items-center justify-center">
+      <div className="bg to-background h-full  max-w-[95%]  md:max-w-[90%] lg:max-w-[85%] xl:max-w-[75%] 2xl:max-w-[65%] space-y-6 flex flex-col items-center justify-center">
         <h1 className="font-goldman text-4xl md:text-6xl opacity-80">
           Aram AI
         </h1>
@@ -172,7 +172,7 @@ const MessageArea = ({ messages }) => {
   }
   return (
     <div
-      className=" bg-background h-full w-full overflow-y-auto "
+      className=" bg-background h-full  max-w-[95%]  md:max-w-[90%] lg:max-w-[85%] xl:max-w-[75%] 2xl:max-w-[65%] "
       style={{ minHeight: 0 }}
     > 
       

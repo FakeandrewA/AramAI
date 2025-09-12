@@ -21,7 +21,7 @@ const InputBar = ({ currentMessage, setCurrentMessage, onSubmit, disabled }) => 
   return (
     <form
       onSubmit={onSubmit}
-      className="p-4 z-90 w-full"
+      className="p-4 z-90 w-[95%]  md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%]"
     >
       
       <div className="flex items-center bg-sidebar/60 rounded-xl p-2 shadow-md w-full">
