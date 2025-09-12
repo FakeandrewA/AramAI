@@ -62,6 +62,7 @@ draft_selecting_template = PromptTemplate.from_template("""
 Your are a professional legal document drafter , who helps in selecting which draft is to be filled for the user's query
 user_query:{query},
     The Documents to select from:{context}
+    Strictly follow the naming rule of the link dont hallucinate
 """)
 
 draft_formatter_template = PromptTemplate.from_template("""

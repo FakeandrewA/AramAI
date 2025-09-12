@@ -12,7 +12,7 @@ const ChatPage = () => {
     const { authUser, getMessages , setCurrentChatId , currentChatId} = useAuthStore();
     const [messages, setMessages] = useState([]);
     const [currentMessage, setCurrentMessage] = useState("");
-    const [checkpointId, setCheckpointId] = useState(null);
+    const [checkpointId, setCheckpointId] = useState("");
     const [receiving, setReceiving] = useState(false);
     let { chatId } = useParams();
 
@@ -42,6 +42,7 @@ const ChatPage = () => {
     
 
     const handleSubmit = async (e) => {
+        console.log("Check", checkpointId);
         e.preventDefault();
         setReceiving(true);
         if (currentMessage.trim()) {
@@ -102,6 +103,7 @@ const ChatPage = () => {
                         switch (data.type) {
                             case "checkpoint":
                                 setCheckpointId(data.checkpoint_id);
+                                console.log(checkpointId);
                                 newSearchInfo.stages.push("checkpoint");
                                 break;
                             case "thinking":

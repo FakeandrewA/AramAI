@@ -75,7 +75,6 @@ export const sendMessage = async (req, res) => {
     if (!aiResponse.body) {
       throw new Error("No response body from AI service");
     }
-    console.log(aiResponse);
     const reader = aiResponse.body.getReader();
     const decoder = new TextDecoder();
 
@@ -96,6 +95,7 @@ export const sendMessage = async (req, res) => {
           const data = safeJSONParse(cleanLine);
 
           // Stream to frontend
+          console.log(data);
           res.write(`data: ${JSON.stringify(data)}\n\n`);
 
           // Build the persistent searchInfo object on the backend
