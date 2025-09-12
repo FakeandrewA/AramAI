@@ -1,7 +1,7 @@
 import { ArrowUp } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-const InputBar = ({ currentMessage, setCurrentMessage, onSubmit, receiving }) => {
+const InputBar = ({ currentMessage, setCurrentMessage, onSubmit, disabled }) => {
   const textareaRef = useRef(null);
 
   const handleChange = (e) => {
@@ -34,7 +34,7 @@ const InputBar = ({ currentMessage, setCurrentMessage, onSubmit, receiving }) =>
 
         <button
           type="submit"
-          disabled = {receiving}
+          disabled = {disabled}
           className="bg-[linear-gradient(var(--gradient-accent))] hover:opacity-90 rounded-xl p-2 ml-2 shadow-md transition-all duration-200 group"
         >
           <ArrowUp className="group-hover:scale-105 text-white transition-all duration-150" />

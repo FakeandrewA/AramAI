@@ -98,9 +98,6 @@ export const sendMessage = async (req, res) => {
 
           // Build the persistent searchInfo object on the backend
           switch (data.type) {
-            case "thinking":
-              searchInfo.stages.push("thinking");
-              break;
             case "search_start":
               searchInfo.stages.push("searching");
               searchInfo.query = data.query;
@@ -134,7 +131,6 @@ export const sendMessage = async (req, res) => {
               searchInfo.error = data.message;
               break;
             case "end":
-              searchInfo.stages.push("writing");
               // Now save the complete object
               if (streamedContent.trim()) {
                 // Remove duplicates before saving
@@ -145,7 +141,7 @@ export const sendMessage = async (req, res) => {
                       role: "ai",
                       content: streamedContent,
                       searchInfo: searchInfo,
-                      messageId: messageId+1
+                      messageId: Number(messageId)+1
                     },
                   },
                 });
@@ -207,7 +203,7 @@ export const getChatMessages = async (req, res) => {
     }
 
     // Sort messages by messageid (ascending)
-    const sortedMessages = [...chat.messages].sort((a, b) => a.messageid - b.messageid);
+    const sortedMessages = [...chat.messages].sort((a, b) => a.messageId - b.messageId);
 
     res.status(200).json({ messages: sortedMessages });
   } catch (error) {
