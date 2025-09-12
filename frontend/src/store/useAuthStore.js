@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { useNavigate } from "react-router-dom";
 
 
 export const useAuthStore = create((set) => ({
@@ -21,8 +20,7 @@ export const useAuthStore = create((set) => ({
       const result = await response.json();
       if (!response.ok) {
         set({ isLoggingIn: false })
-        const errorData = result.json().catch(() => ({}));
-        throw new Error(errorData.message || "Login failed");
+        throw new Error(result.message || "Login failed");
       }
       if (result.token) {
         localStorage.setItem("authToken", result.token);
@@ -67,8 +65,7 @@ export const useAuthStore = create((set) => ({
   },
   logout: async () => {
     localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
-    navigate("/");
+    set({ authUser: null });
 
   },
   checkAuth: async () => {
@@ -201,11 +198,72 @@ export const useAuthStore = create((set) => ({
       throw error;
     }
   },
+
   currentChatId:null,
   setCurrentChatId: (chatId) =>set({currentChatId:chatId}),
   showLetter:false,
   setShowLetter: () =>set(state => ({ showLetter: !state.showLetter })),
+  currentChatId: null,
+  setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
 
+  findLawyers: async (filters = {}) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
 
+      // Build query string
+      const queryParams = new URLSearchParams(filters).toString();
+      const response = await fetch(`http://localhost:5000/api/lawyers/search?${queryParams}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch lawyers");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching lawyers:", error);
+      throw error;
+    }
+  },
+
+  // 🗑 Delete chat
+  deleteChat: async (chatId) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch(`http://localhost:5000/api/chats/${chatId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete chat");
+      }
+
+      // Update state: remove deleted chat from user's list
+      set((state) => ({
+        authUser: {
+          ...state.authUser,
+          chats: state.authUser?.chats.filter((chat) => chat._id !== chatId),
+        },
+      }));
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      throw error;
+    }
+  },
 }));
 

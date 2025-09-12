@@ -10,16 +10,22 @@ const ChatPage = () => {
 
     const { authUser, getMessages , setCurrentChatId , currentChatId} = useAuthStore();
     const [messages, setMessages] = useState([]);
+    const [currentMessage, setCurrentMessage] = useState("");
+    const [checkpointId, setCheckpointId] = useState(null);
+    const [receiving, setReceiving] = useState(false);
     let { chatId } = useParams();
-    if (chatId == null) {
-        return <Navigate to='/onBoarding' />;
-    }
+
     useEffect(()=>{
+        if (chatId == null) {
+            return;
+        }
         setCurrentChatId(chatId)
-        console.log("Current Chat Id" ,chatId)
-        console.log(currentChatId)
-    } , [chatId])
+    } , [chatId, currentChatId, setCurrentChatId])
+
     useEffect(() => {
+        if (chatId == null) {
+            return;
+        }
         const fetchMessages = async () => {
             try {
                 const msgs = await getMessages(chatId);
@@ -30,12 +36,9 @@ const ChatPage = () => {
         };
 
         if (chatId) fetchMessages();
-    }, [chatId]);
+    }, [chatId, getMessages]);
 
-
-    const [currentMessage, setCurrentMessage] = useState("");
-    const [checkpointId, setCheckpointId] = useState(null);
-    const [receiving, setReceiving] = useState(false);
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -89,7 +92,6 @@ const ChatPage = () => {
                 const eventSource = new EventSource(url);
                 let streamedContent = "";
                 let searchData = { stages: [], query: "", urls: [], internalQuery: "", internalUrls: [], ragSources: [], error: null };
-                let hasReceivedContent = false;
 
                 eventSource.onmessage = (event) => {
                     try {
@@ -116,11 +118,12 @@ const ChatPage = () => {
                                 newSearchInfo.stages.push("internal_searching");
                                 newSearchInfo.internalQuery = data.query;
                                 break;
-                            case "i_search_results":
+                            case "i_search_results": {
                                 newSearchInfo.stages.push("internal_reading");
                                 const i_urls = Array.isArray(data.urls) ? data.urls : (data.url ? [data.url] : []);
                                 newSearchInfo.internalUrls = i_urls;
                                 break;
+                            }
                             case "rag_start":
                                 newSearchInfo.stages.push("rag_searching");
                                 newSearchInfo.ragQuery = data.query;
@@ -132,7 +135,6 @@ const ChatPage = () => {
                             case "content":
                                 newSearchInfo.stages.push("writing");
                                 streamedContent += data.content;
-                                hasReceivedContent = true;
                                 break;
                             case "search_error":
                                 newSearchInfo.stages.push("error");
