@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     lastName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, trim: true, lowercase: true },
     password: { type: String, required: true, minlength: 8, select: false },
-    mobile: { type: String, required: true, unique: true, trim: true },
+    mobile: { type: String, required: true, unique: true, trim: true, length: 10 },
     age: { type: Number, required: true, min: 18, max: 100 },
     profilePic: {
         type: String,
@@ -44,12 +44,12 @@ const userSchema = new mongoose.Schema({
     location: {
         type: {
             type: String,
-            enum: ['Point'],
-            default: 'Point'
+            enum: ["Point"],
+            default: "Point"
         },
         coordinates: {
             type: [Number], // [longitude, latitude]
-            index: "2dsphere"
+            default: [0, 0]
         }
     },
 
