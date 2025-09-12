@@ -201,11 +201,6 @@ export const useAuthStore = create((set) => ({
       throw error;
     }
   },
-
-  currentChatId:null,
-  setCurrentChatId: (chatId) =>set({currentChatId:chatId}),
-  showLetter:false,
-  setShowLetter: () =>set(state => ({ showLetter: !state.showLetter })),
   currentChatId: null,
   setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
 
@@ -269,4 +264,3 @@ export const useAuthStore = create((set) => ({
     }
   },
 }));
-
