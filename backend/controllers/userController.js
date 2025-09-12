@@ -5,6 +5,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const registerUser = async (req, res) => {
     try {
@@ -26,20 +28,44 @@ export const registerUser = async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
         // Create new user
-        const newUser = new User({
-            firstName,
-            lastName,
-            mobile,
-            age,
-            profilePic: profilePicUrl,
-            email,
-            password: hashedPassword,
-            role,
-            chats: []
-        });
-        await newUser.save();
-        res.status(201).json({ message: 'User registered successfully' });
-        console.log("New user created:", newUser);
+        if (role === "user") {
+            const newUser = new User({
+                firstName,
+                lastName,
+                mobile,
+                age,
+                profilePic: profilePicUrl,
+                email,
+                password: hashedPassword,
+                role,
+                chats: []
+            });
+            await newUser.save();
+            res.status(201).json({ message: 'User registered successfully' });
+            console.log("New user created:", newUser);
+        } else {
+            const newUser = new User({
+                firstName,
+                lastName,
+                mobile,
+                age,
+                profilePic: profilePicUrl,
+                email,
+                password: hashedPassword,
+                role,
+                chats: [],
+                field: {},
+                description: "",
+                experience: 0,
+                rating: {
+                    count: 0,
+                    review: [],
+                }
+            });
+            await newUser.save();
+            res.status(201).json({ message: 'User registered successfully' });
+            console.log("New user created:", newUser);
+        }
     } catch (error) {
         res.status(500).json({ message: `Server error` });
     }
@@ -112,9 +138,6 @@ export const updateUserProfile = async (req, res) => {
     try {
         const updates = req.body;
         const file = req.file;
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
-
 
         // Find user
         const user = await User.findById(req.user.userId);
@@ -122,24 +145,19 @@ export const updateUserProfile = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // If new profile pic uploaded → delete old one
-        let profilePicUrl = user.profilePic; // keep old if no new one
+        let profilePicUrl = user.profilePic;
+
         if (file) {
-            if (user.profilePic) {
-                // old file path relative to uploads/
-                const oldPath = path.join(
-                    __dirname, "..",
-                    "uploads",
-                    path.basename(user.profilePic)
-                );
+            // Delete old file if exists
+            if (user.profilePic && !user.profilePic.includes("gravatar")) {
+                const oldPath = path.join(__dirname, "..", "uploads", path.basename(user.profilePic));
                 if (fs.existsSync(oldPath)) {
-                    fs.unlinkSync(oldPath); // delete old file
+                    fs.unlinkSync(oldPath);
                 }
             }
             profilePicUrl = `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
         }
 
-        // Apply updates
         const updatedUser = await User.findByIdAndUpdate(
             req.user.userId,
             { ...updates, profilePic: profilePicUrl },
@@ -154,6 +172,52 @@ export const updateUserProfile = async (req, res) => {
 };
 
 
+export const findLawyers = async (req, res) => {
+  try {
+    const { field, q, longitude, latitude, maxDistance } = req.query;
 
+    let filters = [{ role: "lawyer" }]; // ensure only lawyers
 
+    // text search (name, description, field)
+    if (q) {
+      filters.push({
+        $or: [
+          { firstName: { $regex: q, $options: "i" } },
+          { lastName: { $regex: q, $options: "i" } },
+          { description: { $regex: q, $options: "i" } },
+          { field: { $regex: q, $options: "i" } },
+        ],
+      });
+    }
+
+    // match at least one field of specialization
+    if (field) {
+      const fields = Array.isArray(field) ? field : field.split(",");
+      filters.push({ field: { $in: fields } });
+    }
+
+    let query = filters.length > 1 ? { $and: filters } : filters[0];
+
+    // ✅ if location provided → add geospatial search
+    let lawyers;
+    if (longitude && latitude) {
+      lawyers = await User.find({
+        ...query,
+        location: {
+          $near: {
+            $geometry: { type: "Point", coordinates: [parseFloat(longitude), parseFloat(latitude)] },
+            $maxDistance: parseInt(maxDistance) || 5000, // default 5km
+          },
+        },
+      }).select("-password -chats");
+    } else {
+      lawyers = await User.find(query).select("-password -chats");
+    }
+
+    res.json(lawyers);
+  } catch (error) {
+    console.error("Error fetching lawyers:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 

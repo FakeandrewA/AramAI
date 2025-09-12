@@ -4,7 +4,8 @@ import {
     registerUser,
     loginUser,
     getUserProfile,
-    updateUserProfile
+    updateUserProfile,
+    findLawyers
 } from "../controllers/userController.js";
 
 import upload from '../multer.js';
@@ -16,5 +17,6 @@ router.post('/register', upload.single("profilePic"), registerUser);
 router.post('/login', loginUser);
 router.get('/profile', protect, getUserProfile);
 router.patch('/updateProfile', protect,upload.single("profilePic"), updateUserProfile);
+router.get('/lawyer/search', protect, findLawyers);
 
 export default router;

@@ -200,8 +200,39 @@ export const getChatMessages = async (req, res) => {
   }
 };
 
+export const deleteChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const userId = req.user?.userId; // assuming protect middleware sets req.user
 
-/**
- * Get user chat list sorted by newest
- */
+    if (!chatId) {
+      return res.status(400).json({ error: "chatId is required" });
+    }
 
+    // find chat
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).json({ error: "Chat not found" });
+    }
+
+    // ensure user owns this chat
+    if (userId && chat.user.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "Not authorized to delete this chat" });
+    }
+
+    // delete chat
+    await Chat.findByIdAndDelete(chatId);
+
+    // remove chat reference from user's chats list
+    if (userId) {
+      await User.findByIdAndUpdate(userId, {
+        $pull: { chats: chatId },
+      });
+    }
+
+    res.status(200).json({ message: "Chat deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting chat:", error);
+    res.status(500).json({ error: "Failed to delete chat" });
+  }
+};
