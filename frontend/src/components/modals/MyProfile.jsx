@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/store/useAuthStore';
-import { Camera, X } from 'lucide-react';
+import { Camera, LocateFixed, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -145,6 +145,60 @@ const MyProfile = () => {
               />
             </div>
           </div>
+
+          {/* Lawyers  */}
+          {authUser.role == "lawyer" && 
+              <>
+                {/* Working Field  */}
+                <div className="flex w-full justify-between py-4 gap-3 border-b border-border items-center">
+                  <p className="font-medium w-32">Field</p>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      className="w-full bg-sidebar border border-border py-2 rounded px-2"
+                      value={authUser.field}
+                      placeholder='Enter Field'
+                    />
+                  </div>
+                </div>
+
+                {/* Description  */}
+                <div className="flex w-full justify-between py-4 gap-3 border-b border-border items-center">
+                  <p className="font-medium w-32">Describe</p>
+                  <div className="flex-1">
+                    <textarea
+                      rows={4}
+                      type="text"
+                      className="max-h-30 w-full bg-sidebar border border-border py-2 rounded px-2"
+                      value={authUser.description}
+                      placeholder='Describe Yourself'
+                    />
+                  </div>
+                </div>
+              </>
+          }
+          <div className="flex w-full justify-between py-4 gap-3 border-b border-border items-center">
+                  <p className="font-medium w-32">Location</p>
+                  <div className="flex-1 flex gap-2">
+                    <input
+                      type="text"
+                      className="w-full bg-sidebar border border-border py-2 rounded px-2"
+                      value={authUser.field}
+                      placeholder='Latitude'
+                      disabled
+                    />
+                    <input
+                      type="text"
+                      className="w-full bg-sidebar border border-border py-2 rounded px-2"
+                      value={authUser.field}
+                      placeholder='Longitude'
+                      disabled
+                    />
+                    <button className='ml-2 p-2 bg-gradient-to-r from-[#028a2f] to-[#018a45] rounded-xl'>
+                      <LocateFixed className='size-6'/>
+                    </button>
+                  </div>
+            </div>
 
           {/* Account Info */}
           <div className="w-full mt-20">

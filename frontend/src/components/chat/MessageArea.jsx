@@ -104,7 +104,7 @@ const SearchStages = ({ searchInfo }) => {
                       <div className="space-y-1">
                         <div className="flex flex-wrap gap-2">
                           {searchInfo.internalUrls.map((url, i) => (
-                            <div key={i} className="bg-card text-xs px-3 py-1.5 rounded border border-border truncate max-w-[200px]">{url}</div>
+                            <a href={url} target="_blank" key={i} className="bg-card text-xs px-3 py-1.5 rounded border border-border truncate max-w-[200px]">{url}</a>
                           ))}
                         </div>
                       </div>
@@ -160,7 +160,7 @@ const MessageArea = ({ messages }) => {
   }, [messages]);
   if (messages.length == 0) {
     return (
-      <div className="bg to-background h-full  w-[95%]  md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%] space-y-6 flex flex-col items-center justify-center">
+      <div className="bg to-background h-full  w-full space-y-6 flex flex-col items-center justify-center">
         <h1 className="font-goldman text-4xl md:text-6xl opacity-80">
           Aram AI
         </h1>
@@ -172,10 +172,10 @@ const MessageArea = ({ messages }) => {
   }
   return (
     <div
-      className=" bg-background h-full  w-[95%]  md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%] "
+      className=" bg-background h-full w-full overflow-y-auto "
       style={{ minHeight: 0 }}
     > 
-      <LetterArea/>
+      
       <div className=" mx-auto p-6">
         {messages.map((message) => (
           <div
