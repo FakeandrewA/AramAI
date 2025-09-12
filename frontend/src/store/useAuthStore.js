@@ -6,7 +6,11 @@ export const useAuthStore = create((set) => ({
   isLoggingIn: false,
   isSigningUp: false,
   isCheckingAuth: true,
-  showMyProfile: false,
+  showMyProfile: false,showLetter: false,
+  toggleShowLetter: () =>
+    set((state) => ({
+      showLetter: !state.showLetter
+    })),
   setShowMyProfile: () => set(state => ({ showMyProfile: !state.showMyProfile })),
   login: async (credentials) => {
     // console.log(credentials)
