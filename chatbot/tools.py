@@ -9,7 +9,16 @@ from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from pydantic import BaseModel,Field
+from docx import Document
+from striprtf.striprtf import rtf_to_text 
+import tempfile
 load_dotenv()
+
+class DocumentVariable():
+    document_with_var : str = Field(..., description = "Must be a srting of template with ....")
+
+class Link(BaseModel):
+    link: str = Field(..., description="Must be name of the link provided in the context, that is appropriate for the user's query")
 
 class YesNoAnswer(BaseModel):
     answer: str = Field(..., description="Must be either 'yes' or 'no'")
@@ -133,3 +142,55 @@ def indian_kannon_search_tool(query: str, pagenum: int = 1):
         })
 
     return results if results else "No results found."
+
+
+
+@tool
+def draft_document(query : str):
+    """This tool helps to draft a legal document according to the query of user. Choose a correct document
+     template for the document filling perpous"""
+
+    context = ""
+
+    llm_select = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+
+    llm_select_with_structure = llm_select.with_structured_output(Link)
+
+    prompt = PromptTemplate.from_template("""
+    
+    """)
+
+    select_chain = prompt | llm_select_with_structure 
+
+    file_link = select_chain.invoke().link or ""
+    if file_link.lower().endswith(".docx"):
+        file_format = ".docx"
+    elif file_link.lower().endswith(".rtf"):
+        file_format = ".rtf"
+    else:
+        raise ValueError("Unsupported file type. Only .docx and .rtf are supported.")
+
+    # download into temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=file_format) as tmp_file:
+        file_path = tmp_file.name
+        response = requests.get(file_link)
+        response.raise_for_status()
+        tmp_file.write(response.content)
+
+    print(f"Downloaded file saved at: {file_path}")
+
+    # extract text based on type
+    if file_format == ".docx":
+        doc = Document(file_path)
+        template = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
+    elif file_format == ".rtf":
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            rtf_content = f.read()
+            text = rtf_to_text(rtf_content)
+
+    print("Extracted Text:\n", template)
+
+    llm_var = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    llm_var_with_structure = llm_var.with_structured_output(DocumentVariable)
+
+    
