@@ -197,7 +197,7 @@ def draft_selection_tool(query : str):
     Send user's query with improved context for llm to assist with the search
     """
 
-    with open("D:/AramAI/data/drafts/data.txt", "r") as f:
+    with open("C:/Users/SETHUKUMAR/Documents/GitHub/AramAI/data/drafts/data.txt", "r") as f:
         context = f.read()
 
     print("context: ",context,end="\n\n\n")
