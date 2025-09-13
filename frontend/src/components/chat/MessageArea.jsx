@@ -33,7 +33,7 @@ const SearchStages = ({ searchInfo }) => {
   console.log(searchInfo)
 
   return (
-    <div className="relative min-w-30">
+    <div className="relative w-full ">
         <button className={`absolute -top-6 -left-[7px] flex items-center justify-center z-50 p-2 rounded  ${hideStages?"rotate-180":"rotate-0"}`} onClick={()=>{setHideStages(!hideStages)}}>
                     <ChevronUp className={`size-4 `}/>
         </button> 
@@ -171,53 +171,54 @@ const MessageArea = ({ messages }) => {
     );
   }
   return (
-    <div
-      className=" bg-background h-full  max-w-[95%]  md:max-w-[90%] lg:max-w-[85%] xl:max-w-[75%] 2xl:max-w-[65%] "
-      style={{ minHeight: 0 }}
-    > 
-      
-      <div className=" mx-auto p-6">
-        {messages.map((message) => (
+  <div
+    className="bg-background h-full w-[95%] md:w-[90%] lg:w-[85%] xl:w-[75%] 2xl:w-[65%]"
+    style={{ minHeight: 0 }}
+  >
+    <div className="mx-auto p-6">
+      {messages.map((message) => (
+        <div
+          key={message._id}
+          className={`flex ${
+            message.role === "user" ? "justify-end" : "justify-start"
+          } mb-5`}
+        >
           <div
-            key={message._id}
-            className={`flex ${
-              message.role === "user" ? "justify-end" : "justify-start"
-            } mb-5`}
+            className={`flex flex-col   max-w-[00%] md:max-w-[85%] `}
           >
-            <div className="flex flex-col max-w-[90%] md:max-w-[80%] ">
-              {message.role !== "user" && message.searchInfo && (
-                <SearchStages searchInfo={message.searchInfo} />
-              )}
+            {message.role !== "user" && message.searchInfo && (
+              <SearchStages searchInfo={message.searchInfo} />
+            )}
 
-              <div
-                className={`rounded-lg py-3 px-5 ${
-                  message.role === "user"
-                    ? "bg-sidebar/60  rounded-br-none shadow-md border border-border"
-                    : " text-foreground rounded-bl-none shadow-md border border-border dark:shadow-white/4 leading-7 opacity-95"
-                }`}
-              >
-                {message.isLoading ? (
-                  <PremiumTypingAnimation />
+            <div
+              className={`rounded-lg py-3 px-5 break-words whitespace-pre-wrap ${
+                message.role === "user"
+                  ? "bg-sidebar/60 rounded-br-none shadow-md"
+                  : "text-foreground rounded-bl-none shadow-md border border-border dark:shadow-white/4 leading-7 opacity-95"
+              }`}
+            >
+              {message.isLoading ? (
+                <PremiumTypingAnimation />
+              ) : (
+                (message.role === "user" ? (
+                  message.content
                 ) : (
-                  (message.role === "user" ? (
-                    message.content
-                  ) : (
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
-                  )) || (
-                    <span className="text-muted-foreground text-xs italic">
-                      Waiting for response...
-                    </span>
-                  )
-                )}
-              </div>
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                )) || (
+                  <span className="text-muted-foreground text-xs italic">
+                    Waiting for response...
+                  </span>
+                )
+              )}
             </div>
           </div>
-        ))}
-      </div>
-
-      <div ref={endRef} />
+        </div>
+      ))}
     </div>
-  );
+
+    <div ref={endRef} />
+  </div>
+);
 };
 
 export default MessageArea;
