@@ -9,19 +9,29 @@ import LetterArea from "@/components/chat/LetterArea";
 
 const ChatPage = () => {
 
-    const { authUser, getMessages , setCurrentChatId , currentChatId} = useAuthStore();
+    const { authUser, getMessages, setCurrentChatId, currentChatId } = useAuthStore();
     const [messages, setMessages] = useState([]);
     const [currentMessage, setCurrentMessage] = useState("");
     const [checkpointId, setCheckpointId] = useState("");
     const [receiving, setReceiving] = useState(false);
     let { chatId } = useParams();
+    useEffect(() => {
+        if (!chatId) return;
 
-    useEffect(()=>{
-        if (chatId == null) {
-            return;
+        // reset old chat state
+        setMessages([]);
+        setCheckpointId("");
+        setReceiving(false);
+
+        // find the chat and set initial checkpointId
+        const chat = authUser?.chats?.find(c => c._id === chatId);
+        if (chat) {
+            console.log(chat);
+            setCheckpointId(chat.checkpoint_id || "");
         }
-        setCurrentChatId(chatId)
-    } , [chatId, currentChatId, setCurrentChatId])
+
+        setCurrentChatId(chatId);
+    }, [chatId, authUser?.chats, setCurrentChatId]);
 
     useEffect(() => {
         if (chatId == null) {
@@ -39,10 +49,9 @@ const ChatPage = () => {
         if (chatId) fetchMessages();
     }, [chatId, getMessages]);
 
-    
+
 
     const handleSubmit = async (e) => {
-        console.log("Check", checkpointId);
         e.preventDefault();
         setReceiving(true);
         if (currentMessage.trim()) {
@@ -99,11 +108,9 @@ const ChatPage = () => {
                     try {
                         const data = JSON.parse(event.data);
                         let newSearchInfo = { ...searchData, stages: [...searchData.stages] };
-
                         switch (data.type) {
                             case "checkpoint":
                                 setCheckpointId(data.checkpoint_id);
-                                console.log(checkpointId);
                                 newSearchInfo.stages.push("checkpoint");
                                 break;
                             case "thinking":
@@ -146,7 +153,7 @@ const ChatPage = () => {
                                 eventSource.close();
                                 break;
                             case "end":
-                                newSearchInfo.stages = newSearchInfo.stages.filter(stage => stage!=="writing");
+                                newSearchInfo.stages = newSearchInfo.stages.filter(stage => stage !== "writing");
                                 setReceiving(false);
                                 eventSource.close();
                                 break;
@@ -174,19 +181,19 @@ const ChatPage = () => {
                     console.error("EventSource error:", error);
                     eventSource.close();
 
-                        setMessages((prev) =>
-                            prev.map((msg) =>
-                                msg.id === aiResponseId
-                                    ? {
-                                        ...msg,
-                                        content:
-                                            "Sorry, there was an error processing your request.",
-                                        isLoading: false,
-                                    }
-                                    : msg
-                            )
-                        );
-                    
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === aiResponseId
+                                ? {
+                                    ...msg,
+                                    content:
+                                        "Sorry, there was an error processing your request.",
+                                    isLoading: false,
+                                }
+                                : msg
+                        )
+                    );
+
                 };
 
                 eventSource.addEventListener("end", () => {
@@ -215,34 +222,27 @@ const ChatPage = () => {
 
     return (
         <div className="flex flex-col h-screen w-full bg-background">
-    {/* Top Header */}
-    <Header />
+            {/* Top Header */}
+            <Header />
 
-    {/* Scrollable messages (fills remaining space) */}
-    <div className="flex-1 overflow-y-auto px-4 flex  justify-center w-full ">
-      <MessageArea messages={messages} />
-    </div>
+            {/* Scrollable messages (fills remaining space) */}
+            <div className="flex-1 overflow-y-auto px-4 flex  justify-center w-full ">
+                <MessageArea messages={messages} />
+            </div>
 
-    {/* Input bar fixed at bottom */}
-    <div className="flex items-center bg-transparent justify-center w-full  z-50">
-      <InputBar
-        currentMessage={currentMessage}
-        setCurrentMessage={setCurrentMessage}
-        onSubmit={handleSubmit}
-        disabled={receiving}
-      />
-    </div>
-  </div>)
+            {/* Input bar fixed at bottom */}
+            <div className="flex items-center bg-transparent justify-center w-full  z-50">
+                <InputBar
+                    currentMessage={currentMessage}
+                    setCurrentMessage={setCurrentMessage}
+                    onSubmit={handleSubmit}
+                    disabled={receiving}
+                />
+            </div>
+        </div>)
 
 
 };
 
 export default ChatPage;
 
-{/* <InputBar
-          currentMessage={currentMessage}
-          setCurrentMessage={setCurrentMessage}
-          onSubmit={handleSubmit}
-          disabled={receiving}
-        />
-*/}

@@ -98,33 +98,33 @@ async def tool_node(state):
             )
             tool_messages.append(tool_message)
 
-        elif tool_name == "draft_selection_tool":
-            draft_object = await draft_selection_tool.ainvoke(tool_args)
+        # elif tool_name == "draft_selection_tool":
+        #     draft_object = await draft_selection_tool.ainvoke(tool_args)
 
-            # If tool returns JSON string
-            if isinstance(draft_object, str):
-                obj = json.loads(draft_object)
-            else:
-                obj = draft_object  # already dict
+        #     # If tool returns JSON string
+        #     if isinstance(draft_object, str):
+        #         obj = json.loads(draft_object)
+        #     else:
+        #         obj = draft_object  # already dict
 
-            tool_message = ToolMessage(
-                content=draft_object,
-                tool_call_id=tool_id,
-                name=tool_name,
-            )
-            tool_messages.append(tool_message)
+        #     tool_message = ToolMessage(
+        #         content=draft_object,
+        #         tool_call_id=tool_id,
+        #         name=tool_name,
+        #     )
+        #     tool_messages.append(tool_message)
 
-            variables_json = json.dumps(obj.get("variables", []))
-            system_msg_text = (
-                "We are in Drafting Mode. To ensure safety, first collect all these variables "
-                f"from the user before returning to normal mode.\n"
-                f"The variables are {variables_json}. "
-                "Make sure to ask a question for each variable."
-            )
+        #     variables_json = json.dumps(obj.get("variables", []))
+        #     system_msg_text = (
+        #         "We are in Drafting Mode. To ensure safety, first collect all these variables "
+        #         f"from the user before returning to normal mode.\n"
+        #         f"The variables are {variables_json}. "
+        #         "Make sure to ask a question for each variable."
+        #     )
 
-            tool_messages.append(SystemMessage(content=system_msg_text))
+        #     tool_messages.append(SystemMessage(content=system_msg_text))
 
-            stop_after_this = True
+        #     stop_after_this = True
 
     # If draft_selection_tool was used → stop here
     if stop_after_this:

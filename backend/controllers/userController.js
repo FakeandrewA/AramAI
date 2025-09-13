@@ -108,6 +108,7 @@ export const loginUser = async (req, res) => {
         const chats = obj.chats.map(chat => ({
             _id: chat._id,
             name: chat.name,
+            checkpoint_id: chat.checkpoint_id,
             createdAt: chat.createdAt,
         }));
 
@@ -134,10 +135,12 @@ export const getUserProfile = async (req, res) => {
         const chats = (obj.chats || []).map((chat) => ({
             _id: chat._id,
             name: chat.name,
+            checkpoint_id: chat.checkpoint_id,
             createdAt: chat.createdAt,
         }));
         res.status(200).json({ ...obj, chats: chats });
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: 'Server error' });
     }
 };
