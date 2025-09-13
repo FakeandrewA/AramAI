@@ -121,10 +121,8 @@ async def generate_chat_responses(message: str, checkpoint_id: Optional[str] = N
                 output =event["data"]["output"]
                 obj = json.loads(output)
                 yield f"data: {json.dumps({'type':'letter','letter':obj['letter']})}\n\n"
-    # 🔹 End of stream
+    #🔹 End of stream
     yield f"data: {json.dumps({'type': 'end'})}\n\n"
-
-
 
 
 @app.get("/chat_stream/{message}")
