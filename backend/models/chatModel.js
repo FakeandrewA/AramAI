@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const chatSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-
+  checkpoint_id: { type: String, default: "" },
   name: { type: String, required: true },
   messages: [
     {
@@ -18,7 +18,7 @@ const chatSchema = new mongoose.Schema({
         error: String
       },
       content: { type: String, required: true },
-      letter: { type: String, required: true},
+      letter: { type: String, required: true },
       messageId: { type: Number, required: true }
     }
   ]
