@@ -4,7 +4,6 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from chatbot.graph import create_app_async
 import json
-from langgraph.prebuilt import ToolNode
 from typing import Optional
 from uuid import uuid4
 from contextlib import asynccontextmanager
@@ -117,10 +116,6 @@ async def generate_chat_responses(message: str, checkpoint_id: Optional[str] = N
                 output = event["data"]["output"]
                 url = output[0].get("link", "")
                 yield f"data: {json.dumps({'type': 'i_search_results', 'url': url})}\n\n"
-            elif event.get("name") == "draft_selection_tool":
-                output =event["data"]["output"]
-                obj = json.loads(output)
-                yield f"data: {json.dumps({'type':'letter','letter':obj['letter']})}\n\n"
     #🔹 End of stream
     yield f"data: {json.dumps({'type': 'end'})}\n\n"
 
