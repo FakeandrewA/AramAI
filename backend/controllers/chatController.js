@@ -46,9 +46,9 @@ export const sendMessage = async (req, res) => {
 
     let query;
     try {
-        query = JSON.parse(queryreceived);
+      query = JSON.parse(queryreceived);
     } catch (error) {
-        return res.status(400).json({ message: "Invalid query format" });
+      return res.status(400).json({ message: "Invalid query format" });
     }
     console.log(query);
 
@@ -75,7 +75,6 @@ export const sendMessage = async (req, res) => {
     if (!aiResponse.body) {
       throw new Error("No response body from AI service");
     }
-    console.log(aiResponse);
     const reader = aiResponse.body.getReader();
     const decoder = new TextDecoder();
 
@@ -96,10 +95,16 @@ export const sendMessage = async (req, res) => {
           const data = safeJSONParse(cleanLine);
 
           // Stream to frontend
+          console.log(data);
           res.write(`data: ${JSON.stringify(data)}\n\n`);
 
           // Build the persistent searchInfo object on the backend
           switch (data.type) {
+            case "checkpoint":
+              if (data.checkpoint_id) {
+                await Chat.findByIdAndUpdate(chatId, { checkpoint_id: data.checkpoint_id });
+              }
+              break;
             case "search_start":
               searchInfo.stages.push("searching");
               searchInfo.query = data.query;
@@ -133,8 +138,8 @@ export const sendMessage = async (req, res) => {
               searchInfo.error = data.message;
               break;
             case "letter":
-                  letter += data.letter;
-                  break;
+              letter += data.letter;
+              break;
             case "end":
               // Now save the complete object
               await Chat.findByIdAndUpdate(chatId, {
@@ -142,20 +147,19 @@ export const sendMessage = async (req, res) => {
               });
               if (streamedContent.trim()) {
                 // Remove duplicates before saving
-                let messages= {
-                      role: "ai",
-                      content: streamedContent,
-                      searchInfo: searchInfo,
-                      messageId: Number(messageId) + 1
-                    }
-                if(letter.length !== ""){
+                let messages = {
+                  role: "ai",
+                  content: streamedContent,
+                  searchInfo: searchInfo,
+                  messageId: Number(messageId) + 1
+                }
+                if (letter.length !== "") {
                   messages.letter = letter;
                 }
                 searchInfo.stages = Array.from(new Set(searchInfo.stages));
                 await Chat.findByIdAndUpdate(chatId, {
-                  $push: {
-                    messages
-                  },
+                  $push: { messages },
+                  checkpoint_id: checkpoint_id
                 });
                 aiMessageSaved = true;
               }

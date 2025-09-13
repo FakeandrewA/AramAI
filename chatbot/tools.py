@@ -9,22 +9,22 @@ from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from pydantic import BaseModel,Field
-import docx
-from striprtf.striprtf import rtf_to_text 
-import tempfile
+
 load_dotenv()
 
-class DocumentVariable():
-    document_with_var : str = Field(..., description = "Must be a srting of template with ....")
-
+### Pydantic Models
 class Link(BaseModel):
     link: str = Field(..., description="Must be name of the link provided in the context, that is appropriate for the user's query")
 
 class YesNoAnswer(BaseModel):
     answer: str = Field(..., description="Must be either 'yes' or 'no'")
 
-llm = ChatGoogleGenerativeAI(
+### Custom LLMs
+
+relevance_checker = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash").with_structured_output(YesNoAnswer)
+
+### Prompt templates
 
 rag_relevance_template = PromptTemplate.from_template("""You are legal assistant who excel in checking relevance of documents retrieved by the RAG with the users query.
 Your task is provide 'yes' if there is relevance or 'no'. dont generate anything else
@@ -33,7 +33,12 @@ Here is the Retrieved Context:
 {context}
 """)
 
-rag_relevance_chain = rag_relevance_template | llm
+
+### Chains
+
+rag_relevance_chain = rag_relevance_template | relevance_checker
+
+### Helper Functions
 
 def extract_tokens_with_bs4(text: str):
     """Extract tokens using BeautifulSoup, lowercase + simple split."""
@@ -43,10 +48,35 @@ def extract_tokens_with_bs4(text: str):
     stopwords = {"the", "and", "for", "with", "that", "from", "case", "law"}
     return [t for t in tokens if t not in stopwords]
 
+### Tools
+
 @tool
 def rag_tool(query:str,rerank:bool,top_k:int,top_rerank_k:int):
-    """Use this tool to get relevant document chunks stored in our qdrant db for the user's query , restructure the user's query to get the most relevancy
-    unlike a search query , rag queries must be very descriptive even if the user gives a vague query, so the database can match a vector.
+    """Retrieve relevant document chunks from the Qdrant vector database and generate context 
+    for Retrieval-Augmented Generation (RAG).
+
+    This tool reformulates vague user queries into descriptive queries that better match 
+    vector embeddings. It retrieves top-k candidate chunks, optionally re-ranks them, and 
+    constructs a context string for the LLM to determine relevancy.
+
+    Args:
+        query (str): The user's query, which may be vague or incomplete. 
+        rerank (bool): Whether to apply a re-ranking step to refine the retrieved chunks. 
+        top_k (int): Number of top candidate chunks to initially retrieve. 
+        top_rerank_k (int): Number of chunks to keep after re-ranking (if rerank=True).
+
+    Returns:
+        str: 
+            - The concatenated relevant context if the LLM determines it is useful. 
+            - "No relevant Context Found in the VectorDatabase. Please Use Search Tool to Get Context" 
+              if no suitable context is found.
+
+    Side Effects:
+        Prints "The LLM Said Yes" if the LLM confirms the retrieved context is relevant.
+
+    Notes:
+        - Retrieval is performed from the configured Qdrant collection.
+        - Each retrieved chunk is prefixed with its index for traceability.
     """
     client = get_client()
     retrieved_chunks = get_relevant_points(query,client,COLLECTION_NAME,top_k,rerank,top_rerank_k)
@@ -62,8 +92,48 @@ def rag_tool(query:str,rerank:bool,top_k:int,top_rerank_k:int):
 
 @tool
 def indian_kannon_search_tool(query: str, pagenum: int = 1):
-    """Search Indian Kanoon for case law, statutes or judgments.
-    Uses BM25 to find the most relevant pages inside judgments.
+    """Search Indian Kanoon for case law, statutes, or judgments and return the most 
+    relevant pages using BM25 ranking.
+
+    This tool integrates with the Indian Kanoon API to fetch legal documents matching 
+    a user query. It then applies BM25 ranking at the page level to identify the most 
+    relevant sections of a judgment, along with their neighbors for better context.
+
+    Workflow:
+        1. Query the Indian Kanoon API to retrieve document metadata.
+        2. For each retrieved document (limited to top 2):
+            - Fetch the full judgment text.
+            - Clean HTML into plain text and split into pseudo-pages.
+            - Tokenize pages and rank them using BM25 against query tokens.
+            - Select the most relevant page along with its neighbors.
+        3. Return structured results with metadata and relevant page content.
+
+    Args:
+        query (str): Search query string (e.g., case name, statute, legal keywords).
+        pagenum (int, optional): Page number of search results to fetch. Defaults to 1.
+
+    Returns:
+        list[dict] | str:
+            - A list of dictionaries containing:
+                - title (str): Title of the case or document.
+                - citation (str): Citation of the case (if available).
+                - publishdate (str): Publication date of the judgment.
+                - docsource (str): Source of the document (e.g., High Court, Supreme Court).
+                - link (str): Direct link to the full judgment on Indian Kanoon.
+                - snippet (str): Highlighted snippet from the search result.
+                - relevant_pages (list[dict]): BM25-ranked relevant pages with:
+                    - page_no (int): Index of the page within the judgment.
+                    - score (float): BM25 relevance score.
+                    - content (str): Page text.
+            - "No results found." if no documents match the query.
+
+    Raises:
+        HTTPError: If the Indian Kanoon API returns an error response.
+
+    Notes:
+        - Only the top 2 search results are processed for efficiency.
+        - Each judgment is split into pseudo-pages by paragraph grouping.
+        - Neighboring pages are included to avoid losing context.
     """
 
     base_url = "https://api.indiankanoon.org"
@@ -143,56 +213,5 @@ def indian_kannon_search_tool(query: str, pagenum: int = 1):
 
     return results if results else "No results found."
 
-
-
-@tool
-def draft_document(query : str):
-    """This tool helps to draft a legal document according to the query of user. Choose a correct document
-     template for the document filling perpous"""
-
-    context = ""
-
-    llm_select = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-
-    llm_select_with_structure = llm_select.with_structured_output(Link)
-
-    prompt = PromptTemplate.from_template("""
-    
-    """)
-
-    select_chain = prompt | llm_select_with_structure 
-
-    file_link = select_chain.invoke().link or ""
-    if file_link.lower().endswith(".docx"):
-        file_format = ".docx"
-    elif file_link.lower().endswith(".rtf"):
-        file_format = ".rtf"
-    else:
-        raise ValueError("Unsupported file type. Only .docx and .rtf are supported.")
-
-    # download into temp file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=file_format) as tmp_file:
-        file_path = tmp_file.name
-        response = requests.get(file_link)
-        response.raise_for_status()
-        tmp_file.write(response.content)
-
-    print(f"Downloaded file saved at: {file_path}")
-
-    # extract text based on type
-    if file_format == ".docx":
-        doc = docx.Document(file_path)
-        template = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
-    elif file_format == ".rtf":
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            rtf_content = f.read()
-            text = rtf_to_text(rtf_content)
-
-    print("Extracted Text:\n", template)
-
-    llm_var = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-
-    
-    llm_var_with_structure = llm_var.with_structured_output(DocumentVariable)
 
     

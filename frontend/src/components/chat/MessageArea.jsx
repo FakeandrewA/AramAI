@@ -30,7 +30,6 @@ const SearchStages = ({ searchInfo }) => {
   if (!searchInfo || !searchInfo.stages?.length) return null;
   const [currentStage , setCurrentStage] = useState();
   const [hideStages , setHideStages] = useState(false);
-  console.log(searchInfo)
 
   return (
     <div className="relative w-full ">
