@@ -15,7 +15,9 @@ const ChatPage = () => {
     const [checkpointId, setCheckpointId] = useState("");
     const [receiving, setReceiving] = useState(false);
     let { chatId } = useParams();
+    useEffect(() => {
 
+}, [checkpointId]);
     useEffect(()=>{
         if (chatId == null) {
             return;
@@ -24,6 +26,7 @@ const ChatPage = () => {
     } , [chatId, currentChatId, setCurrentChatId])
 
     useEffect(() => {
+        setCheckpointId("");
         if (chatId == null) {
             return;
         }
@@ -42,7 +45,6 @@ const ChatPage = () => {
     
 
     const handleSubmit = async (e) => {
-        console.log("Check", checkpointId);
         e.preventDefault();
         setReceiving(true);
         if (currentMessage.trim()) {
@@ -99,11 +101,9 @@ const ChatPage = () => {
                     try {
                         const data = JSON.parse(event.data);
                         let newSearchInfo = { ...searchData, stages: [...searchData.stages] };
-
                         switch (data.type) {
                             case "checkpoint":
                                 setCheckpointId(data.checkpoint_id);
-                                console.log(checkpointId);
                                 newSearchInfo.stages.push("checkpoint");
                                 break;
                             case "thinking":
@@ -239,10 +239,3 @@ const ChatPage = () => {
 
 export default ChatPage;
 
-{/* <InputBar
-          currentMessage={currentMessage}
-          setCurrentMessage={setCurrentMessage}
-          onSubmit={handleSubmit}
-          disabled={receiving}
-        />
-*/}
