@@ -30,6 +30,16 @@ const MyProfile = () => {
   const handleChange = (e) => {
     setIsProfileChanged(true);
     const { name, value } = e.target;
+    if(name == "latitude" || name == "longitude") {
+      const coords = [...formdata.location.coordinates];
+      if(name === "latitude") coords[1] = parseFloat(value);
+      else coords[0] = parseFloat(value);
+      setFormData((prev) => ({
+        ...prev,
+        location: { type: "Point", coordinates: coords },
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -253,14 +263,17 @@ const MyProfile = () => {
                 className="w-full bg-sidebar border border-border py-2 rounded px-2"
                 value={formdata.location.coordinates[1] || ""}
                 placeholder="Latitude"
-                disabled
+                name="latitude"
+                onChange={handleChange}
+
               />
               <input
                 type="text"
                 className="w-full bg-sidebar border border-border py-2 rounded px-2"
                 value={formdata.location.coordinates[0] || ""}
                 placeholder="Longitude"
-                disabled
+                name="longitude"
+                onChange={handleChange}
               />
               <button
                 onClick={handleUpdateLocation}
