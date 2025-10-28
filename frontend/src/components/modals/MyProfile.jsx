@@ -3,12 +3,14 @@ import { Camera, LocateFixed, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCoordinates } from '../../utils/getCoordinates';
+import ErrorMessage from "@/components/ErrorMessage";
 
 const MyProfile = () => {
   const { setShowMyProfile, authUser, logout, updateProfile } = useAuthStore();
   const [isProfileChanged, setIsProfileChanged] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   const handleLogout = () => {
     logout();
@@ -58,6 +60,7 @@ const MyProfile = () => {
       setShowMyProfile();
     } catch (error) {
       console.error("Error updating profile:", error);
+      setError("Failed to update profile. Please try again.");
     }
   };
 
@@ -305,6 +308,7 @@ const MyProfile = () => {
             Logout
           </button>
 
+          {error && (<ErrorMessage message={error}  />)}
           {/* Save & Cancel */}
           <div className="mt-10 w-full flex justify-end gap-6">
             <button onClick={setShowMyProfile} className="px-4 py-1 border-2 border-border rounded-lg hover:opacity-80">

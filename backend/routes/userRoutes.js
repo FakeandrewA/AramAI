@@ -8,7 +8,7 @@ import {
     findLawyers
 } from "../controllers/userController.js";
 
-import upload from '../multer.js';
+import upload from '../lib/multer.js';
 
 const router = express.Router();
 

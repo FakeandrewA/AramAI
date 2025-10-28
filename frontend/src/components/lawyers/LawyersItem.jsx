@@ -1,5 +1,6 @@
 import { AudioWaveform } from 'lucide-react';
 import React from 'react'
+import { Link } from 'react-router-dom';
 
 const LawyersItem = ({ lawyer }) => {
   if (!lawyer) return null;
@@ -46,12 +47,15 @@ const LawyersItem = ({ lawyer }) => {
       </div>
 
       {/* Contact Button */}
+      <Link to="/contact" state={{ lawyerId: lawyer._id }}>
       <div className='flex justify-end w-full'>
+        
         <button className='px-4 flex gap-3 items-center text-white border border-border hover:scale-105 transition-all duration-150 py-2 bg-gradient-to-r from-emerald-500 to-green-700 rounded-xl'>
           Contact
           <AudioWaveform className='size-4' />
         </button>
       </div>
+      </Link>
     </div>
   )
 }
