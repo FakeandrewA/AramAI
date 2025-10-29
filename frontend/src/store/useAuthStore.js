@@ -1,12 +1,15 @@
 import { create } from "zustand";
+import { io } from "socket.io-client";
 
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   authUser: null,
   isLoggingIn: false,
   isSigningUp: false,
   isCheckingAuth: true,
   showMyProfile: false,showLetter: false,
+  socket: null,
+  onlineUsers: [],
   toggleShowLetter: () =>
     set((state) => ({
       showLetter: !state.showLetter
@@ -29,6 +32,7 @@ export const useAuthStore = create((set) => ({
       if (result.token) {
         localStorage.setItem("authToken", result.token);
         set({ authUser: result.user });
+        get().connectSocket();
       }
       return response;
     } catch (err) {
@@ -58,7 +62,7 @@ export const useAuthStore = create((set) => ({
       return { ok: false, ...data };
     }
     alert("SignUp Succefull, Please Login!");
-    return { ok: true, ...data }; // 👈 now safe
+    return { ok: true, ...data }; 
   } catch (err) {
     console.error("Signup error:", err);
     return { ok: false, message: "Network error" };
@@ -70,8 +74,10 @@ export const useAuthStore = create((set) => ({
 
 
   logout: async () => {
+    get().disconnetSocket();
     localStorage.removeItem("authToken");
     set({ authUser: null });
+
 
   },
   checkAuth: async () => {
@@ -95,6 +101,8 @@ export const useAuthStore = create((set) => ({
 
       const profile = await response.json();
       // console.log(profile)
+      
+      get().connectSocket();
       set({ authUser: profile })
 
     } catch (error) {
@@ -282,4 +290,25 @@ export const useAuthStore = create((set) => ({
       throw error;
     }
   },
+  connectSocket: () => {
+    const token = localStorage.getItem("authToken");
+    if (!token || get().socket?.connected) return;
+    const socket = io("http://localhost:5000", {
+      auth: { token },
+      userId: get().authUser?._id
+    });
+    set({ socket });
+
+     socket.on("getOnlineUsers", (userIds) => {
+      set({ onlineUsers: userIds });
+     });
+   
+  },
+  disconnetSocket: () => {
+    const socket = get().socket;
+    if (socket) {
+      socket.disconnect();
+      set({ socket: null });
+    }
+  }
 }));
