@@ -64,7 +64,7 @@ const LoginPage = () => {
           className="mb-2 w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
         />
         {errors.username && (
-          <p className="mb-4 text-sm text-red-500">{errors.username}</p>
+          <ErrorMessage message={errors.username} />
         )}
 
         {/* Password input */}
@@ -77,13 +77,11 @@ const LoginPage = () => {
           className="mb-2 w-full rounded-[var(--corner-md)] border border-[var(--clr-border)] bg-[var(--clr-bg-alt)] px-4 py-3 text-[var(--clr-text-main)] placeholder-[var(--clr-text-subtle)] focus:border-[var(--clr-primary-main)] focus:outline-none focus:ring-2 focus:ring-[var(--clr-emerald-main)]"
         />
         {errors.password && (
-          <p className="mb-6 text-sm text-red-500">{errors.password}</p>
+          <ErrorMessage message={errors.password} />
         )}
         {/* General error */}
         {errors.general && (
-          <p className="mb-4 text-center text-sm text-red-500">
-            {errors.general}
-          </p>
+          <ErrorMessage message={errors.general} />
         )}
 
         {/* Login button */}

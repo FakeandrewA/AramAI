@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { validateForm as validate } from "@/utils/auth/validator";
-import ErrorMessage from "@/components/auth/ErrorMessage";
+import ErrorMessage from "@/components/ErrorMessage";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 

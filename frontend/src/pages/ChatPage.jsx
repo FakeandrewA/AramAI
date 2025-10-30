@@ -54,6 +54,7 @@ const ChatPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setReceiving(true);
+        console.log("Hi from handle Submit")
         if (currentMessage.trim()) {
             const newMessageId = messages.length + 1;
 

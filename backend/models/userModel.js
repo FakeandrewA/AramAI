@@ -1,12 +1,44 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    firstName: { type: String, minlength: 2, maxlength: 30, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, trim: true, lowercase: true },
-    password: { type: String, required: true, minlength: 8, select: false },
-    mobile: { type: String, required: true, unique: true, trim: true, length: 10 },
-    age: { type: Number, required: true, min: 18, max: 100 },
+    firstName: { 
+        type: String, 
+        minlength: 2, 
+        maxlength: 30, 
+        required: true, 
+        trim: true 
+    },
+    lastName: { 
+        type: String, 
+        required: true, 
+        trim: true 
+    },
+    email: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        trim: true, 
+        lowercase: true 
+    },
+    password: { 
+        type: String, 
+        required: true, 
+        minlength: 8, 
+        select: false 
+    },
+    mobile: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        trim: true, 
+        length: 10 
+    },
+    age: { 
+        type: Number, 
+        required: true, 
+        min: 18, 
+        max: 100 
+    },
     profilePic: {
         type: String,
         trim: true,
@@ -22,25 +54,51 @@ const userSchema = new mongoose.Schema({
     },
 
     chats: [
-        { type: mongoose.Schema.Types.ObjectId, ref: "Chat" }
+        { 
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Chat" 
+        }
     ],
 
     // Lawyer-specific fields
-    field: [{ type: String, maxlength: 50 }],
-    description: { type: String, maxlength: 500 },
-    experience: { type: Number },
+    field: [
+        { 
+            type: String, 
+            maxlength: 50 
+        }
+    ],
+    description: { 
+        type: String, 
+        maxlength: 500 
+    },
+    experience: { 
+        type: Number 
+    },
     rating: {
-        count: { type: Number, default: 0 },
+        count: { 
+            type: Number, 
+            default: 0 
+        },
         reviews: [
             {
-                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-                rate: { type: Number, min: 0, max: 5 },
-                comment: { type: String, maxlength: 100 }
+                userId: { 
+                    type: mongoose.Schema.Types.ObjectId, 
+                    ref: "User" 
+                },
+                rate: { 
+                    type: Number, 
+                    min: 0, 
+                    max: 5 
+                },
+                comment: { 
+                    type: String, 
+                    maxlength: 100 
+                }
             }
         ]
     },
 
-    // 📍 GeoJSON location
+    // GeoJSON location
     location: {
         type: {
             type: String,
@@ -53,8 +111,14 @@ const userSchema = new mongoose.Schema({
         }
     },
 
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    createdAt: { 
+        type: Date, 
+        default: Date.now 
+    },
+    updatedAt: { 
+        type: Date, 
+        default: Date.now 
+    }
 });
 
 // ensure geospatial index

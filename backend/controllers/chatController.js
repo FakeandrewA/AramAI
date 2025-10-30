@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Chat from "../models/chatModel.js";
 import User from "../models/userModel.js";
-import { generateChatName, safeJSONParse } from "../utils.js";
+import { generateChatName, safeJSONParse } from "../lib/utils.js";
 
 /**
  * Create a new chat with a default welcome message

@@ -13,6 +13,7 @@ import { Loader } from "lucide-react";
 import Layout from "./contexts/LayoutContext";
 import RedirectToLatestChat from "./contexts/RedirectToLatestChat";
 import LawyerPage from "./pages/LawyerPage";
+import ContactPage from "./pages/Contact";
 
 function App() {
   const { isCheckingAuth, authUser, checkAuth } = useAuthStore();
@@ -62,6 +63,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <LawyerPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contact/"
+              element={
+                <ProtectedRoute>
+                  <ContactPage />
                 </ProtectedRoute>
               }
             />

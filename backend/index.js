@@ -9,9 +9,9 @@ import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 
+import {app, server} from './lib/socket.js';
 dotenv.config();
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_DEV_URI;
 

@@ -3,12 +3,14 @@ import { Camera, LocateFixed, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCoordinates } from '../../utils/getCoordinates';
+import ErrorMessage from "@/components/ErrorMessage";
 
 const MyProfile = () => {
   const { setShowMyProfile, authUser, logout, updateProfile } = useAuthStore();
   const [isProfileChanged, setIsProfileChanged] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   const handleLogout = () => {
     logout();
@@ -30,6 +32,16 @@ const MyProfile = () => {
   const handleChange = (e) => {
     setIsProfileChanged(true);
     const { name, value } = e.target;
+    if(name == "latitude" || name == "longitude") {
+      const coords = [...formdata.location.coordinates];
+      if(name === "latitude") coords[1] = parseFloat(value);
+      else coords[0] = parseFloat(value);
+      setFormData((prev) => ({
+        ...prev,
+        location: { type: "Point", coordinates: coords },
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -48,6 +60,7 @@ const MyProfile = () => {
       setShowMyProfile();
     } catch (error) {
       console.error("Error updating profile:", error);
+      setError("Failed to update profile. Please try again.");
     }
   };
 
@@ -253,14 +266,17 @@ const MyProfile = () => {
                 className="w-full bg-sidebar border border-border py-2 rounded px-2"
                 value={formdata.location.coordinates[1] || ""}
                 placeholder="Latitude"
-                disabled
+                name="latitude"
+                onChange={handleChange}
+
               />
               <input
                 type="text"
                 className="w-full bg-sidebar border border-border py-2 rounded px-2"
                 value={formdata.location.coordinates[0] || ""}
                 placeholder="Longitude"
-                disabled
+                name="longitude"
+                onChange={handleChange}
               />
               <button
                 onClick={handleUpdateLocation}
@@ -292,6 +308,7 @@ const MyProfile = () => {
             Logout
           </button>
 
+          {error && (<ErrorMessage message={error}  />)}
           {/* Save & Cancel */}
           <div className="mt-10 w-full flex justify-end gap-6">
             <button onClick={setShowMyProfile} className="px-4 py-1 border-2 border-border rounded-lg hover:opacity-80">
