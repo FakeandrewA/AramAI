@@ -4,7 +4,7 @@ bcrypt
 beautifulsoup4
 fastapi
 grpcio
-langchain
+langchain==0.3.27
 langchain-community
 langchain-core
 langchain-experimental
@@ -27,4 +27,5 @@ uvicorn[standard]
 rank_bm25
 langgraph.checkpoint.sqlite
 python-docx
+
 striprtf
