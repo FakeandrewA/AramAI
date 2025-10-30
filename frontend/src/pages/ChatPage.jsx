@@ -3,7 +3,7 @@ import Header from "../components/chat/Header";
 import InputBar from "@/components/chat/InputBar";
 import MessageArea from "@/components/chat/MessageArea";
 import React, { useState, useEffect } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, redirect, useParams } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
 import LetterArea from "@/components/chat/LetterArea";
 
@@ -16,9 +16,7 @@ const ChatPage = () => {
     const [receiving, setReceiving] = useState(false);
     let { chatId } = useParams();
     useEffect(() => {
-        if (!chatId) return;
-
-        // reset old chat state
+        if (!chatId) redirect("/chat");
         setMessages([]);
         setCheckpointId("");
         setReceiving(false);
@@ -26,12 +24,12 @@ const ChatPage = () => {
         // find the chat and set initial checkpointId
         const chat = authUser?.chats?.find(c => c._id === chatId);
         if (chat) {
-            console.log(chat);
             setCheckpointId(chat.checkpoint_id || "");
         }
 
         setCurrentChatId(chatId);
-    }, [chatId, authUser?.chats, setCurrentChatId]);
+        
+    }, [chatId, authUser?.chats, setCurrentChatId, currentChatId]);
 
     useEffect(() => {
         if (chatId == null) {

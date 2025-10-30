@@ -12,11 +12,16 @@ const __dirname = path.dirname(__filename);
 export const registerUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password, mobile, age, role, latitude, longitude } = req.body;
-    const profilePic = req.file ? req.file.path : null;
+    const file = req.file;
+    console.log("Received file:", file);
+    const profilePic = file ? file.path : null;
     let profilePicUrl = null;
     if (profilePic) {
-      const cloudinaryResponse = cloudinary.uploader.upload(profilePic);
+      const cloudinaryResponse = await cloudinary.uploader.upload(file.path, {
+        folder: "users/profilePics",
+      });
       profilePicUrl = cloudinaryResponse.secure_url;
+      console.log(fs.existsSync(file.path));
       fs.unlink(file.path, (err) => {
         if (err) console.log("Error deleting temp file:", err);
       });

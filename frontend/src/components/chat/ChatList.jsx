@@ -21,10 +21,8 @@ const ChatList = ({ chats, onNewChat, userId }) => {
 
     // If deleted chat was active → redirect to latest
     if (chatId === currentChatId) {
-      if (authUser.chats.length > 0) {
-        const latest = authUser.chats[0]; // chats are sorted newest → oldest
-        navigate(`/chat/${latest._id}`);
-        setCurrentChatId(latest._id);
+      if (authUser.chats.length > 0) {// chats are sorted newest → oldest
+        navigate(`/chat`);
       } else {
         navigate("/onboarding");
       }
@@ -64,12 +62,10 @@ const ChatList = ({ chats, onNewChat, userId }) => {
       <div className="font-medium tracking-wider text-xs opacity-60 mb-4">
         ARAM AI
       </div>
-      <div className="w-full p-2 mb-6 hover:bg-muted transition-all duration-100 rounded-lg">
-        <button onClick={handleNewChat} className="flex gap-2 items-center">
+        <button onClick={handleNewChat} className="flex gap-2 items-center w-full p-2 mb-6 hover:bg-muted transition-all duration-100 rounded-lg">
           <FilePenLine size={16} />
           <p className="text-sm">New Chat</p>
         </button>
-      </div>
 
       {/* Chat List */}
       <div className="w-full flex-1 space-y-2 overflow-y-auto">

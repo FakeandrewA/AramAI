@@ -41,7 +41,7 @@ const SignupPage = () => {
       if (file.size > MAX_FILE_SIZE) {
         setNewErrors((prev) => ({
           ...prev,
-          profilePic: "File size must be less than 15 MB",
+          profilePic: "File size must be less than 5 MB",
         }));
         setProfilePic(null);
       } else {
@@ -50,6 +50,7 @@ const SignupPage = () => {
           return rest; // clear previous error
         });
         setProfilePic(file);
+        console.log("Selected file:", file);
       }
     }
   };

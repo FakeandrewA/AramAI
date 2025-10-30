@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 
 const RedirectToLatestChat = () => {
   const navigate = useNavigate();
-  const { authUser, createChat } = useAuthStore();
+  const { authUser, createChat, setCurrentChatId, CurrentChatId } = useAuthStore();
   const hasRun = useRef(false); // ✅ prevents duplicate execution
 
   useEffect(() => {
@@ -13,16 +13,16 @@ const RedirectToLatestChat = () => {
       hasRun.current = true;
 
       let latestChatId = null;
-
       if (authUser.chats && authUser.chats.length > 0) {
         latestChatId = authUser.chats[0]._id;
+        await setCurrentChatId(latestChatId);
       } else {
         try {
           const chat = await createChat(authUser._id);
-          console.log("Created chat:", chat);
 
           if (chat && chat._id) {
             latestChatId = chat._id;
+            await setCurrentChatId(latestChatId);
           } else {
             navigate("/onboarding", { replace: true });
             return;
@@ -40,7 +40,7 @@ const RedirectToLatestChat = () => {
     };
 
     redirectToChat();
-  }, [authUser, navigate, createChat]);
+  }, [authUser, navigate, createChat, CurrentChatId]);
 
   return null;
 };

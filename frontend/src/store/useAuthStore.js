@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { io } from "socket.io-client";
+import { redirect, replace } from "react-router-dom";
 
 
 export const useAuthStore = create((set, get) => ({
@@ -10,10 +11,13 @@ export const useAuthStore = create((set, get) => ({
   showMyProfile: false,showLetter: false,
   socket: null,
   onlineUsers: [],
+  currentChatId: null,
   toggleShowLetter: () =>
     set((state) => ({
       showLetter: !state.showLetter
     })),
+    
+  setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
   setShowMyProfile: () => set(state => ({ showMyProfile: !state.showMyProfile })),
   login: async (credentials) => {
     // console.log(credentials)
@@ -32,7 +36,7 @@ export const useAuthStore = create((set, get) => ({
       if (result.token) {
         localStorage.setItem("authToken", result.token);
         set({ authUser: result.user });
-        get().connectSocket();
+        // get().connectSocket();
       }
       return response;
     } catch (err) {
@@ -74,7 +78,7 @@ export const useAuthStore = create((set, get) => ({
 
 
   logout: async () => {
-    get().disconnetSocket();
+    // get().disconnetSocket();
     localStorage.removeItem("authToken");
     set({ authUser: null });
 
@@ -102,7 +106,7 @@ export const useAuthStore = create((set, get) => ({
       const profile = await response.json();
       // console.log(profile)
       
-      get().connectSocket();
+      // get().connectSocket();
       set({ authUser: profile })
 
     } catch (error) {
@@ -118,6 +122,10 @@ export const useAuthStore = create((set, get) => ({
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
+        return;
+      }
+      if(!chatId){
+        redirect("/chat");
         return;
       }
       const response = await fetch(`http://localhost:5000/api/chats/${chatId}/messages`, {
@@ -228,8 +236,6 @@ export const useAuthStore = create((set, get) => ({
   }
 },
 
-  currentChatId: null,
-  setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
 
   findLawyers: async (data) => {
     try {
@@ -277,38 +283,40 @@ export const useAuthStore = create((set, get) => ({
       }
 
       // Update state: remove deleted chat from user's list
+      
+      set({ currentChatId: null }); // Clear currentChatId if needed
       set((state) => ({
         authUser: {
           ...state.authUser,
           chats: state.authUser?.chats.filter((chat) => chat._id !== chatId),
         },
       }));
+      return response.json; // Redirect to chats list
 
-      return await response.json();
     } catch (error) {
       console.error("Error deleting chat:", error);
       throw error;
     }
   },
-  connectSocket: () => {
-    const token = localStorage.getItem("authToken");
-    if (!token || get().socket?.connected) return;
-    const socket = io("http://localhost:5000", {
-      auth: { token },
-      userId: get().authUser?._id
-    });
-    set({ socket });
+  // connectSocket: () => {
+  //   const token = localStorage.getItem("authToken");
+  //   if (!token || get().socket?.connected) return;
+  //   const socket = io("http://localhost:5000", {
+  //     auth: { token },
+  //     userId: get().authUser?._id
+  //   });
+  //   set({ socket });
 
-     socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
-     });
+  //    socket.on("getOnlineUsers", (userIds) => {
+  //     set({ onlineUsers: userIds });
+  //    });
    
-  },
-  disconnetSocket: () => {
-    const socket = get().socket;
-    if (socket) {
-      socket.disconnect();
-      set({ socket: null });
-    }
-  }
+  // },
+  // disconnetSocket: () => {
+  //   const socket = get().socket;
+  //   if (socket) {
+  //     socket.disconnect();
+  //     set({ socket: null });
+  //   }
+  // }
 }));
