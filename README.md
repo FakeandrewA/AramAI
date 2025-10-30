@@ -48,17 +48,7 @@ cd AramAI
 ```bash
 INDIAN_KANOON_API_KEY=
 GOOGLE_API_KEY=
-OPENAI_API_KEY=
 TAVILY_API_KEY=
-LANGSMITH_TRACING=true
-LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-LANGSMITH_API_KEY=
-LANGSMITH_PROJECT=
-GROQ_API_KEY=
-```
-#### Backend `.env`
-
-```bash
 PORT=
 MONGO_DEV_URI=
 JWT_SECRET=your_jwt_secret_key
@@ -68,7 +58,6 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 AI_API_URL=http://localhost:8000/chat_stream/
 ```
-
 ---
 
 ### 3️⃣ Setup Vector Database (Qdrant)
