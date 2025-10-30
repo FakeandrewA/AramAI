@@ -4,13 +4,18 @@ from typing import List
 from qdrant_client.models import ScoredPoint
 from qdrant_client import QdrantClient
 from sentence_transformers import CrossEncoder
-
+from nomic import login, embed
+import os
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv("NOMIC_API_KEY")
+login(api_key)
 def embed_query(query: str):
     query_vector = OllamaEmbeddings(model = "nomic-embed-text").embed_query(query)
     return query_vector
 
 def get_client(host : str = "localhost", api_key : str = None):
-    client = QdrantClient(host=host, port=6333, api_key= api_key)
+    client = QdrantClient(host=host, port=6333, api_key=api_key)
     try:
         client.info()
         print("Qdrant is running ✅")
@@ -30,7 +35,11 @@ def get_relevant_points(
 ) -> List[str]:
 
     # Get query vector
-    query_vector = embed_query(query)
+    query_vector = embed.text(
+        texts=[query],
+        model="nomic-embed-text-v1",
+    )["embeddings"][0]
+
 
     # Search in Qdrant
     points = client.query_points(

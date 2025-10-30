@@ -27,5 +27,5 @@ uvicorn[standard]
 rank_bm25
 langgraph.checkpoint.sqlite
 python-docx
-
+nomic
 striprtf
