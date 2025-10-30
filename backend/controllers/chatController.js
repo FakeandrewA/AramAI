@@ -3,6 +3,7 @@ import Chat from "../models/chatModel.js";
 import User from "../models/userModel.js";
 import { generateChatName, safeJSONParse } from "../lib/utils.js";
 
+let AI_API_URL = process.env.AI_API_URL || "http://localhost:8000/chat_stream/";
 /**
  * Create a new chat with a default welcome message
  */
@@ -65,7 +66,7 @@ export const sendMessage = async (req, res) => {
     let letter = "";
 
     // 3️⃣ Call AI API streaming endpoint
-    let aiServiceUrl = `http://localhost:8000/chat_stream/${encodeURIComponent((query.query))}`;
+    let aiServiceUrl = `${AI_API_URL}${encodeURIComponent((query.query))}`;
     if (checkpoint_id) {
       aiServiceUrl += `?checkpoint_id=${encodeURIComponent(checkpoint_id)}`;
     }
