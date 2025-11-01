@@ -22,7 +22,7 @@ Frontend** – Provides a smooth, mobile-friendly user interface.
 
 | Layer               | Technology                      |
 | ------------------- | ------------------------------- |
-| **Frontend**        | React Native                    |
+| **Frontend**        | React                           |
 | **Backend**         | Node.js + Express               |
 | **AI Service**      | FastAPI + LangChain + LangGraph |
 | **Database**        | MongoDB (Atlas)                 |
