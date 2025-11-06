@@ -1,7 +1,7 @@
 # 🧠 AramAI – RAG-based Legal AI Assistant
 
 **AramAI** is an intelligent **Legal AI Assistant** designed to provide contextual legal information and document analysis using **Retrieval-Augmented Generation (RAG)**.
-It integrates **FastAPI**, **LangChain**, **LangGraph**, **React Native**, and **MongoDB** to deliver a full-stack AI experience — combining legal domain data with natural language understanding.
+It integrates **FastAPI**, **LangChain**, **LangGraph**, **React**, and **MongoDB** to deliver a full-stack AI experience — combining legal domain data with natural language understanding.
 
 ---
 
@@ -11,7 +11,8 @@ It integrates **FastAPI**, **LangChain**, **LangGraph**, **React Native**, and *
 * 🧩 **RAG Architecture** – Retrieves relevant legal documents before generating responses.
 * 📚 **Vector Database (Qdrant)** – Stores and searches legal embeddings efficiently.
 * 🌐 **FastAPI Backend** – Powers the AI and API endpoints.
-* 💻 **React Native Frontend** – Provides a smooth, mobile-friendly user interface.
+* 💻 **React 
+Frontend** – Provides a smooth, mobile-friendly user interface.
 * ☁️ **MongoDB Integration** – Handles user data and query history.
 * 🧠 **Embeddings via Ollama + nomic-embed-text** – For semantic document retrieval.
 
@@ -21,7 +22,7 @@ It integrates **FastAPI**, **LangChain**, **LangGraph**, **React Native**, and *
 
 | Layer               | Technology                      |
 | ------------------- | ------------------------------- |
-| **Frontend**        | React Native                    |
+| **Frontend**        | React                           |
 | **Backend**         | Node.js + Express               |
 | **AI Service**      | FastAPI + LangChain + LangGraph |
 | **Database**        | MongoDB (Atlas)                 |
@@ -102,7 +103,7 @@ npm run dev
 
 ---
 
-### 6️⃣ Run Frontend (React Native)
+### 6️⃣ Run Frontend (React)
 
 ```bash
 cd frontend
@@ -154,7 +155,7 @@ uvicorn main:app --reload
 AramAI/
 │
 ├── backend/         # Node.js + Express server
-├── frontend/        # React Native app
+├── frontend/        # React app
 ├── venv/            # Python virtual environment
 ├── main.py          # FastAPI entry point
 ├── requirements.txt # Python dependencies
@@ -168,7 +169,7 @@ AramAI/
 
 * **LangChain**, **LangGraph**
 * **FastAPI**, **Uvicorn**
-* **React Native**, **Node.js**
+* **React**, **Node.js**
 * **MongoDB**, **Qdrant**
 * **Ollama**
 * **Cloudinary** (for file storage)
