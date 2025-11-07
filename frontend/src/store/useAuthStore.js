@@ -23,7 +23,7 @@ export const useAuthStore = create((set, get) => ({
     // console.log(credentials)
     set({ isLoggingIn: true })
     try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
+      const response = await fetch("https://aramai.onrender.com/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
@@ -58,7 +58,7 @@ export const useAuthStore = create((set, get) => ({
       options.body = JSON.stringify(formData);
     }
 
-    const response = await fetch("http://localhost:5000/api/users/register", options);
+    const response = await fetch("https://aramai.onrender.com/api/users/register", options);
 
     const data = await response.json().catch(() => ({})); // 👈 parse JSON always
 
@@ -90,7 +90,7 @@ export const useAuthStore = create((set, get) => ({
       if (!token) {
         return;
       }
-      const response = await fetch("http://localhost:5000/api/users/profile", {
+      const response = await fetch("https://aramai.onrender.com/api/users/profile", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ export const useAuthStore = create((set, get) => ({
         redirect("/chat");
         return;
       }
-      const response = await fetch(`http://localhost:5000/api/chats/${chatId}/messages`, {
+      const response = await fetch(`https://aramai.onrender.com/api/chats/${chatId}/messages`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +155,7 @@ export const useAuthStore = create((set, get) => ({
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/chats/create`, {
+      const response = await fetch(`https://aramai.onrender.com/api/chats/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -211,7 +211,7 @@ export const useAuthStore = create((set, get) => ({
       formData.append("location", JSON.stringify(updates.location));
     }
 
-    const response = await fetch("http://localhost:5000/api/users/updateProfile", {
+    const response = await fetch("https://aramai.onrender.com/api/users/updateProfile", {
       method: "PATCH",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -243,7 +243,7 @@ export const useAuthStore = create((set, get) => ({
       if (!token) return;
 
       // Build query string
-      const response = await fetch(`http://localhost:5000/api/users/lawyer/search`, {
+      const response = await fetch(`https://aramai.onrender.com/api/users/lawyer/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,7 +270,7 @@ export const useAuthStore = create((set, get) => ({
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch(`http://localhost:5000/api/chats/${chatId}`, {
+      const response = await fetch(`https://aramai.onrender.com/api/chats/${chatId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`,

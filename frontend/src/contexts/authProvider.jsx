@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
         options.body = JSON.stringify(formData);
       }
 
-      const response = await fetch("http://localhost:5000/api/users/register", options);
+      const response = await fetch("https://aramai.onrender.com/api/users/register", options);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
+      const response = await fetch("https://aramai.onrender.com/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),

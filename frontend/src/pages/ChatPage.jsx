@@ -94,7 +94,7 @@ const ChatPage = () => {
                     query: userInput,
                     messageId: aiResponseId,
                 };
-                let url = `http://localhost:5000/api/chats/send?chatId=${chatId}&messageId=${newMessageId}&queryreceived=${encodeURIComponent(JSON.stringify(message))}`;
+                let url = `https://aramai.onrender.com/api/chats/send?chatId=${chatId}&messageId=${newMessageId}&queryreceived=${encodeURIComponent(JSON.stringify(message))}`;
                 if (checkpointId) {
                     url += `&checkpoint_id=${encodeURIComponent(checkpointId)}`;
                 }
