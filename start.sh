@@ -1,29 +1,19 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting full stack setup for Render..."
+echo "🚀 Starting backend with internal FastAPI..."
 
-# === Backend ===
-echo "📦 Installing backend dependencies..."
+# === Start FastAPI (Python) in background ===
+echo "🐍 Installing Python dependencies..."
+pip install -r requirements.txt
+
+echo "▶️ Starting FastAPI server..."
+uvicorn main:app --host 0.0.0.0 --port 8000 &
+
+# === Start Node backend ===
+echo "📦 Installing Node dependencies..."
 cd backend
-npm install --omit=dev
+npm ci --omit=dev
 
-echo "▶️ Starting backend server..."
-npm start &  # run backend in background
-
-# === Frontend ===
-cd ..
-echo "📦 Installing frontend dependencies..."
-cd frontend
-npm install --include=dev  # Vite needs devDependencies like @vitejs/plugin-react
-
-echo "🏗️ Building frontend..."
-npm run build
-
-echo "🌐 Serving frontend..."
-npx serve -s dist -l 3000 &  # serve built frontend on port 3000
-
-# === Python API (FastAPI) ===
-cd ..
-echo "🐍 Starting Python API..."
-uvicorn main:app --host 0.0.0.0 --port 8000
+echo "🚀 Starting Node backend..."
+npm start
