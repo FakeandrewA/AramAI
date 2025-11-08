@@ -8,14 +8,16 @@ from nomic import login, embed
 import os
 from dotenv import load_dotenv
 load_dotenv()
-api_key = os.getenv("NOMIC_API_KEY")
-login(api_key)
+nomic_api_key = os.getenv("NOMIC_API_KEY")
+qdrant_api_key = os.getenv("QDRANT_API")
+qdrant_endpoint = os.getenv("QDRANT_ENDPOINT")
+login(nomic_api_key)
 def embed_query(query: str):
     query_vector = OllamaEmbeddings(model = "nomic-embed-text").embed_query(query)
     return query_vector
 
-def get_client(host : str = "localhost", api_key : str = None):
-    client = QdrantClient(host=host, port=6333, api_key=api_key)
+def get_client(host : str = qdrant_endpoint, api_key : str = qdrant_api_key):
+    client = QdrantClient(url=host, port=6333, api_key=api_key)
     try:
         client.info()
         print("Qdrant is running ✅")
