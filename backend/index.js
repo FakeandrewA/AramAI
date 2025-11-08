@@ -8,8 +8,11 @@ import { fileURLToPath } from 'url';
 
 import userRoutes from './routes/userRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 
-import {app, server} from './lib/socket.js';
+import { app, server } from './lib/socket.js'; 
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -30,28 +33,29 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/chats', chatRoutes);
-
+app.use('/api/messages', messageRoutes);
+app.use('/api/contacts', contactRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
 // Root route
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+  res.send('Hello World!');
 });
 
 // Connect to MongoDB and start server
 mongoose.connect(MONGO_URI)
-.then(() => {
-    console.log('✅ MongoDB connected');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-})
-.catch(err => console.error('❌ MongoDB connection error:', err));
+  .then(() => {
+    console.log('✅MongoDB connected');
+    server.listen(PORT, () => console.log(`🚀 Server + Socket.IO running on port ${PORT}`));  // ✅ FIXED
+  })
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', err => {
-    console.error('Unhandled Rejection:', err);
-    process.exit(1);
+  console.error('Unhandled Rejection:', err);
+  process.exit(1);
 });
