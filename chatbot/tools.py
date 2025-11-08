@@ -1,13 +1,13 @@
-from langchain.tools import tool
+from langchain_core.tools import tool
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 from rank_bm25 import BM25Okapi
 from retrieval.utils import get_relevant_points,get_client
-from retrieval.config import COLLECTION_NAME,CROSS_ENCODER
+from retrieval.config import COLLECTION_NAME
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel,Field
 
 load_dotenv()

@@ -1,6 +1,6 @@
 from chatbot.schema import base_state
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import ChatPromptTemplate,MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceholder
 from chatbot.tools import indian_kannon_search_tool,rag_tool
 from langchain_tavily import TavilySearch
 from langchain_core.messages import ToolMessage
@@ -67,82 +67,57 @@ async def model(state : base_state) -> base_state:
 
 
 async def tool_node(state):
-    """Custom tool node that handles tool calls from the LLM."""
-
-    tool_calls = state["messages"][-1].tool_calls
+    """Handles tool calls from the LLM with proper error handling."""
     tool_messages = []
 
-    stop_after_this = False   # 👈 flag to short-circuit
+    try:
+        tool_calls = state["messages"][-1].tool_calls
+    except (KeyError, AttributeError, IndexError):
+        # Graceful fallback if no tool calls
+        return {"messages": []}
 
     for tool_call in tool_calls:
-        tool_name = tool_call["name"]
-        tool_args = tool_call["args"]
-        tool_id = tool_call["id"]
+        tool_name = tool_call.get("name")
+        tool_args = tool_call.get("args", {})
+        tool_id = tool_call.get("id")
 
-        if tool_name == "tavily_search":
-            search_results = await search_tool.ainvoke(tool_args)
-            tool_message = ToolMessage(
-                content=str(search_results),
-                tool_call_id=tool_id,
-                name=tool_name
+        # --- Tavily Search ---
+        if tool_name in {"tavily_search", "tavily_search_results_json", "TavilySearch"}:
+            try:
+                search_results = await search_tool.ainvoke(tool_args)
+                content = (
+                    search_results.model_dump_json(indent=2)
+                    if hasattr(search_results, "model_dump_json")
+                    else str(search_results)
+                )
+            except Exception as e:
+                content = f"Error: TavilySearch failed → {e}"
+
+            tool_messages.append(
+                ToolMessage(content=content, tool_call_id=tool_id, name=tool_name)
             )
-            tool_messages.append(tool_message)
 
+        # --- Indian Kanoon Tool ---
         elif tool_name == "indian_kannon_search_tool":
-            search_results = await indian_kannon_search_tool.ainvoke(tool_args)
-            tool_message = ToolMessage(
-                content=search_results,
-                tool_call_id=tool_id,
-                name=tool_name,
-            )
-            tool_messages.append(tool_message)
+            try:
+                search_results = await indian_kannon_search_tool.ainvoke(tool_args)
+            except Exception as e:
+                search_results = f"Error: {e}"
 
+            tool_messages.append(
+                ToolMessage(content=str(search_results), tool_call_id=tool_id, name=tool_name)
+            )
+
+        # --- RAG Tool ---
         elif tool_name == "rag_tool":
-            context = await rag_tool.ainvoke(tool_args)
-            tool_message = ToolMessage(
-                content=context,
-                tool_call_id=tool_id,
-                name=tool_name,
+            try:
+                context = await rag_tool.ainvoke(tool_args)
+            except Exception as e:
+                context = f"Error: {e}"
+
+            tool_messages.append(
+                ToolMessage(content=str(context), tool_call_id=tool_id, name=tool_name)
             )
-            tool_messages.append(tool_message)
 
-        # elif tool_name == "draft_selection_tool":
-        #     draft_object = await draft_selection_tool.ainvoke(tool_args)
-
-        #     # If tool returns JSON string
-        #     if isinstance(draft_object, str):
-        #         obj = json.loads(draft_object)
-        #     else:
-        #         obj = draft_object  # already dict
-
-        #     tool_message = ToolMessage(
-        #         content=draft_object,
-        #         tool_call_id=tool_id,
-        #         name=tool_name,
-        #     )
-        #     tool_messages.append(tool_message)
-
-        #     variables_json = json.dumps(obj.get("variables", []))
-        #     system_msg_text = (
-        #         "We are in Drafting Mode. To ensure safety, first collect all these variables "
-        #         f"from the user before returning to normal mode.\n"
-        #         f"The variables are {variables_json}. "
-        #         "Make sure to ask a question for each variable."
-        #     )
-
-        #     tool_messages.append(SystemMessage(content=system_msg_text))
-
-        #     stop_after_this = True
-
-    # If draft_selection_tool was used → stop here
-    if stop_after_this:
-        # return tool outputs as final state
-        return {"messages": tool_messages, "end": True}
-
-    # Otherwise continue as usual
-    return {"messages": tool_messages}
-
-
-
-
-# tool_node = ToolNode(tools = tools)
+    # Return all messages if any tool ran successfully
+    return {"messages": tool_messages} if tool_messages else {"messages": []}
