@@ -61,13 +61,14 @@ const getContacts = asyncHandler(async (req, res) => {
 
   const userObjectId = new mongoose.Types.ObjectId(userId);
 
+
   // Find all contacts where user is either user1 or user2
   const contacts = await Contact.find({
     $or: [{ user1: userObjectId }, { user2: userObjectId }],
-  })
-    .populate("lastMessage", "text createdAt")
+  }).populate("lastMessage").lean()
     .populate("user1", "firstName lastName email profilePic")
     .populate("user2", "firstName lastName email profilePic")
+
     .sort({ updatedAt: -1 });
 
   // Transform data so frontend always sees “the other person”
@@ -84,13 +85,7 @@ const getContacts = asyncHandler(async (req, res) => {
         email: otherUser.email,
         profilePic: otherUser.profilePic,
       },
-      lastMessage: contact.lastMessage
-        ? {
-            _id: contact.lastMessage._id,
-            text: contact.lastMessage.text,
-            createdAt: contact.lastMessage.createdAt,
-          }
-        : null,
+      lastMessage: contact?.lastMessage || null,
       updatedAt: contact.updatedAt,
     };
   });
@@ -142,7 +137,7 @@ const updateLastMessage = asyncHandler(async (req, res) => {
   const updatedContact = await contact.save();
 
   // Populate for frontend preview refresh
-  const populated = await updatedContact.populate("lastMessage", "text createdAt");
+  const populated = await updatedContact.populate("lastMessage", "content createdAt");
 
   res.status(200).json(populated);
 });

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import cloudinary from '../lib/clouninary.js';
+import cloudinary from '../lib/cloudinary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -157,6 +157,7 @@ export const updateUserProfile = async (req, res) => {
   try {
     let updates = { ...req.body };
     const file = req.file;
+    console.log("Received profile update with data:", updates, "and file:", file);
 
     // Parse JSON fields if they exist
     if (updates.field) {

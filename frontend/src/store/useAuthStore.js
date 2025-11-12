@@ -19,6 +19,7 @@ export const useAuthStore = create((set, get) => ({
   isSigningUp: false,
   showMyProfile: false,
   showLetter: false,
+  currentContact: null,
 
   // ===========================
   // 🧠 UI Toggles
@@ -26,6 +27,7 @@ export const useAuthStore = create((set, get) => ({
   toggleShowLetter: () => set((s) => ({ showLetter: !s.showLetter })),
   setShowMyProfile: () => set((s) => ({ showMyProfile: !s.showMyProfile })),
   setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
+  setCurrentContact: (contact) => set({ currentContact: contact }),
 
   // ===========================
   // 🔌 SOCKET CONNECTION
@@ -79,7 +81,6 @@ export const useAuthStore = create((set, get) => ({
   // 🧾 AUTHENTICATION
   // ===========================
   login: async (credentials) => {
-    set({ isLoggingIn: true });
     try {
       const res = await fetch(`${BACKEND_URL}/api/users/login`, {
         method: "POST",
@@ -91,6 +92,7 @@ export const useAuthStore = create((set, get) => ({
       if (!res.ok) throw new Error(result.message || "Login failed");
 
       localStorage.setItem("authToken", result.token);
+      set({ isLoggingIn: true });
       set({ authUser: result.user });
       get().connectSocket();
 
@@ -282,10 +284,18 @@ export const useAuthStore = create((set, get) => ({
     const formData = new FormData();
     Object.entries(updates).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        formData.append(key, typeof value === "object" ? JSON.stringify(value) : value);
+        // 🟢 Detect File or Blob objects and append them as-is
+        if (value instanceof File || value instanceof Blob) {
+          formData.append(key, value);
+        } else if (typeof value === "object") {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value);
+        }
       }
     });
 
+    console.log("Updating profile with data:", updates);
     const res = await fetch(`${BACKEND_URL}/api/users/updateProfile`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },

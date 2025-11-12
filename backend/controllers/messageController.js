@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 
 const sendMessage = asyncHandler(async (req, res) => {
   const { contactId, senderId, receiverId, content, fileUrl } = req.body;
+  console.log("Received message data:", req.body);
     if (!contactId || !senderId || !receiverId || !content) {
         res.status(400);
         throw new Error("Please provide all required fields");

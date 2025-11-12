@@ -4,17 +4,17 @@ const contactSchema = new mongoose.Schema(
   {
     user1: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // ✅ must match your User model name exactly
+      ref: "User", 
       required: true,
     },
     user2: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // ✅ must match your User model name exactly
+      ref: "User", 
       required: true,
     },
     lastMessage: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Message", // ✅ must match your Message model name
+      ref: "Message",
       default: null,
     },
   },

@@ -13,16 +13,11 @@ const InputMessage = ({ onSubmit }) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (message.trim() !== "") {
-        handleSend();
+        onSubmit(message);
       }
     }
   };
 
-  const handleSend = () => {
-    if (!message.trim()) return;
-    onSubmit?.(message.trim()); // send message to parent
-    setMessage("");
-  };
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -53,7 +48,7 @@ const InputMessage = ({ onSubmit }) => {
         />
 
         <button
-          onClick={handleSend}
+          onClick={onSubmit.bind(null, message)}
           disabled={!message.trim()}
           className=" hover:text-foreground p-2 bg-emerald-500 disabled:opacity-65 rounded-xl hover:scale-105 transition-all duration-150"
         >

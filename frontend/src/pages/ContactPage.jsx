@@ -17,7 +17,7 @@ const ContactPage = () => {
         <div className="w-1/3">
             <ContactList/>
         </div>
-        <NoChatContainer/>
+        <ChatContainer/>
       </div>
     </div>
   )

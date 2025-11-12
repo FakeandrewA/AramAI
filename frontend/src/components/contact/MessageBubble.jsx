@@ -14,7 +14,7 @@ const MessageBubble = ({ message, isOwnMessage }) => {
             : "border-1 border-muted shadow-lg text-foreground rounded-bl-none"
         }`}
       >
-        {message}
+        {message.content}
       </div>
     </div>
   );
