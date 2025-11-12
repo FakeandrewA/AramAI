@@ -8,10 +8,11 @@ const sendMessage = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error("Please provide all required fields");
     }
+    
     const message = await Message.create({
-        contactId: mongoose.Types.ObjectId(contactId),
-        senderId: mongoose.Types.ObjectId(senderId),
-        receiverId: mongoose.Types.ObjectId(receiverId),
+        contactId: new mongoose.Types.ObjectId(contactId),
+        senderId: new mongoose.Types.ObjectId(senderId),
+        receiverId: new mongoose.Types.ObjectId(receiverId),
         content,
         fileUrl,
     });
@@ -25,12 +26,20 @@ const sendMessage = asyncHandler(async (req, res) => {
 
 const getMessages = asyncHandler(async (req, res) => {
   const { contactId } = req.params;
-    if (!contactId) {
-        res.status(400);
-        throw new Error("Chat ID is required");
-    }
-    const messages = await Message.find({ contactId: mongoose.Types.ObjectId(contactId) }).sort({ createdAt: 1 });
-    res.status(200).json(messages);
+
+  if (!contactId) {
+    res.status(400);
+    throw new Error("Contact ID is required");
+  }
+
+  const contactObjectId = new mongoose.Types.ObjectId(contactId);
+
+  // Fetch messages sorted oldest → newest
+  const messages = await Message.find({ contactId: contactObjectId })
+    .select("senderId content read delivered fileUrl createdAt") // ✅ select only what you need
+    .sort({ createdAt: 1 });
+
+  res.status(200).json(messages);
 });
 
 const deleteMessage = asyncHandler(async (req, res) => {

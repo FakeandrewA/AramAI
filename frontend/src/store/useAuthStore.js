@@ -4,6 +4,7 @@ import { socketManager } from "../utils/SocketManager"; // make sure socketManag
 
 // Define backend base URL here directly
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+console.log("Using BACKEND_URL:", BACKEND_URL);
 
 export const useAuthStore = create((set, get) => ({
   // ===========================
@@ -23,7 +24,7 @@ export const useAuthStore = create((set, get) => ({
   // 🧠 UI Toggles
   // ===========================
   toggleShowLetter: () => set((s) => ({ showLetter: !s.showLetter })),
-  toggleShowMyProfile: () => set((s) => ({ showMyProfile: !s.showMyProfile })),
+  setShowMyProfile: () => set((s) => ({ showMyProfile: !s.showMyProfile })),
   setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
 
   // ===========================
@@ -86,6 +87,7 @@ export const useAuthStore = create((set, get) => ({
         body: JSON.stringify(credentials),
       });
       const result = await res.json();
+      result.ok = res.ok;
       if (!res.ok) throw new Error(result.message || "Login failed");
 
       localStorage.setItem("authToken", result.token);

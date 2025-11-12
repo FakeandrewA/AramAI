@@ -32,7 +32,7 @@ const LoginPage = () => {
         setErrors({general: "Login failed. Please check your credentials." })
       }
     } catch (error) {
-      setErrors({ general: "Login failed. Please check your credentials." });
+      setErrors({ general: "Login failed." });
     } finally {
     }
   };
