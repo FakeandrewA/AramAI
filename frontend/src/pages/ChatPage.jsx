@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 import { Navigate, redirect, useParams } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
 import LetterArea from "@/components/chat/LetterArea";
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 const ChatPage = () => {
 
     const { authUser, getMessages, setCurrentChatId, currentChatId } = useAuthStore();
@@ -94,7 +94,7 @@ const ChatPage = () => {
                     query: userInput,
                     messageId: aiResponseId,
                 };
-                let url = `${BACKEND_URL}/api/chats/send?chatId=${chatId}&messageId=${newMessageId}&queryreceived=${encodeURIComponent(JSON.stringify(message))}`;
+                let url = `http://localhost:5000/api/chats/send?chatId=${chatId}&messageId=${newMessageId}&queryreceived=${encodeURIComponent(JSON.stringify(message))}`;
                 if (checkpointId) {
                     url += `&checkpoint_id=${encodeURIComponent(checkpointId)}`;
                 }
