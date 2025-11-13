@@ -24,7 +24,7 @@ const ContentElement = ({ contact, onClick, isActive }) => {
             {/* Details */}
             <div className="flex flex-col justify-evenly overflow-hidden non-selectable-text">
                 <h4 className="font-medium text-[16px] truncate">
-                    {contactUser.name || 'Unknown User'}
+                    {contactUser.firstName + " " + contactUser.lastName || 'Unknown User'}
                 </h4>
                 <p className="text-sm opacity-80 text-[12px] w-[90%] truncate">
                     {lastMessage || 'No messages yet'}

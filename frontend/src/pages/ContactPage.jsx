@@ -1,8 +1,5 @@
 import ChatContainer from "@/components/contact/ChatContainer";
 import ContactList from "@/components/contact/ContactList";
-import InputMessage from "@/components/contact/InputMessage";
-import MessageBubble from "@/components/contact/MessageBubble";
-import NoChatContainer from "@/components/contact/NoChatContainer";
 import { Info, MoreHorizontal } from "lucide-react";
 
 

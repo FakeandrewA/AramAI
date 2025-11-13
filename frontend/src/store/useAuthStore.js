@@ -20,6 +20,7 @@ export const useAuthStore = create((set, get) => ({
   showMyProfile: false,
   showLetter: false,
   currentContact: null,
+  contacts: [],
 
   // ===========================
   // 🧠 UI Toggles
@@ -28,6 +29,7 @@ export const useAuthStore = create((set, get) => ({
   setShowMyProfile: () => set((s) => ({ showMyProfile: !s.showMyProfile })),
   setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
   setCurrentContact: (contact) => set({ currentContact: contact }),
+  setContacts: (data) => set({contacts: data}),
 
   // ===========================
   // 🔌 SOCKET CONNECTION
@@ -57,6 +59,7 @@ export const useAuthStore = create((set, get) => ({
         // Real-time message & typing updates
         receiveMessage: (msg) => {
           console.log("📩 New message received:", msg);
+          getContacts();
           // Optional: store in message state if you maintain one
         },
         userTyping: ({ contactId, isTyping }) => {
@@ -179,8 +182,10 @@ export const useAuthStore = create((set, get) => ({
   // 💬 MESSAGES
   // ===========================
   getContactMessages: async (contactId) => {
-    return await get().fetchWithAuth(`${BACKEND_URL}/api/messages/${contactId}`);
-  },
+  const res = await get().fetchWithAuth(`${BACKEND_URL}/api/messages/${contactId}`);
+  return res; // DO NOT setContacts here
+},
+
 
   sendMessage: async (messageData) => {
     const message = await get().fetchWithAuth(`${BACKEND_URL}/api/messages/send`, {
@@ -248,8 +253,19 @@ export const useAuthStore = create((set, get) => ({
   },
 
   getContacts: async (userId) => {
-    return await get().fetchWithAuth(`${BACKEND_URL}/api/contacts/${userId}`);
-  },
+  const res = await get().fetchWithAuth(`${BACKEND_URL}/api/contacts/${userId}`);
+  set({contacts: res});
+  return res;
+},
+
+
+  updateContactLastMessage: (contactId, lastMessage) =>
+  set((state) => ({
+    contacts: state.contacts.map((c) =>
+      c._id === contactId ? { ...c, lastMessage } : c
+    ),
+  })),
+
 
   deleteContact: async (contactId) => {
     return await get().fetchWithAuth(`${BACKEND_URL}/api/contacts/${contactId}`, {
@@ -258,7 +274,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   updateLastMessage: async (contactId, messageId) => {
-    return await get().fetchWithAuth(`${BACKEND_URL}/api/contacts/${contactId}/lastMessage`, {
+    return await get().fetchWithAuth(`${BACKEND_URL}/api/contacts/${contactId}/last-message`, {
       method: "PATCH",
       body: JSON.stringify({ messageId }),
     });

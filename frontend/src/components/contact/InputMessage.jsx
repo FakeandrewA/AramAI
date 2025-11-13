@@ -15,6 +15,7 @@ const InputMessage = ({ onSubmit }) => {
       if (message.trim() !== "") {
         onSubmit(message);
       }
+      setMessage("");
     }
   };
 
